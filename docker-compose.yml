@@ -1,25 +1,22 @@
 services:
+  game_server_base:
+    build:
+      context: .
+      dockerfile: "./DockerFiles/Dockerfile.game_server"
+    image: game_server_base:latest
+
   mongodb:
     image: mongo:8.0.9
     container_name: hypixel_mongo
     environment:
-      MONGO_INITDB_DATABASE: Minestom # Default database name
-      MONGO_URL: hypixel_mongo
+      MONGO_INITDB_DATABASE: Minestom
     volumes:
       - ./configuration/mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro
       - mongodb-data:/data/db
-      - ./configuration/:/csv
     ports:
       - "27017:27017"
     networks:
       - hypixel_network
-    healthcheck:
-      test: |
-        mongosh --eval "db.adminCommand('ping').ok" --quiet > /dev/null 2>&1 || exit 1
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    command: ["mongod", "--quiet"]
 
   redis:
     image: redis:latest
@@ -28,11 +25,6 @@ services:
       - "6379:6379"
     networks:
       - hypixel_network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   proxy:
     build:
@@ -42,12 +34,8 @@ services:
     ports:
       - "25565:25565"
     depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    volumes:
-      - ./configuration:/app/configuration_files
+      - mongodb
+      - redis
     networks:
       - hypixel_network
     healthcheck:
@@ -55,34 +43,160 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 20s
 
-  game_server:
-    build:
-      context: .
-      dockerfile: "./DockerFiles/Dockerfile.game_server"
-    container_name: hypixel_game_server
+# ------- Limbo Server ------
+  nanolimbo:
+    image: game_server_base:latest
+    container_name: nanolimbo
+    environment:
+      JAR_FILE: "NanoLimbo-1.9.1-all.jar"
+    ports:
+      - "65535:65535"
+    depends_on:
+      proxy:
+        condition: service_healthy
+    networks:
+      - hypixel_network
+
+
+# ----- Services ------
+  service_api:
+    image: game_server_base:latest
+    container_name: service_api
+    environment:
+      JAR_FILE: "ServiceAPI.jar"
     depends_on:
       proxy:
         condition: service_healthy
     ports:
-      - "25566:25566"
-      - "65535:65535"
-      - "20000:20000"
-    volumes:
-      - ./configuration:/app/configuration_files
+      - "8080:8080"
     networks:
       - hypixel_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:25566"]
+      test: ["CMD", "nc", "-z", "localhost", "8080"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
+
+  service_auctionhouse:
+    image: game_server_base:latest
+    container_name: service_auctionhouse
+    environment:
+      JAR_FILE: "ServiceAuctionHouse.jar"
+    depends_on:
+      proxy:
+        condition: service_healthy
+      service_api:
+        condition: service_healthy
+    networks:
+      - hypixel_network
+
+  service_bazaar:
+    image: game_server_base:latest
+    container_name: service_bazaar
+    environment:
+      JAR_FILE: "ServiceBazaar.jar"
+    depends_on:
+      proxy:
+        condition: service_healthy
+      service_api:
+        condition: service_healthy
+    networks:
+      - hypixel_network
+
+  service_itemtracker:
+    image: game_server_base:latest
+    container_name: service_itemtracker
+    environment:
+      JAR_FILE: "ServiceItemTracker.jar"
+    depends_on:
+      proxy:
+        condition: service_healthy
+      service_api:
+        condition: service_healthy
+    networks:
+      - hypixel_network
+
+
+# ----- Game Servers ------
+  skyblockcore_island:
+    restart: unless-stopped
+    image: game_server_base:latest
+    container_name: skyblockcore_island
+    environment:
+      JAR_FILE: "SkyBlockCore.jar"
+      ARGS: "ISLAND"
+      PREVIEW_FLAG: "--enable-preview"
+    ports:
+      - "20000:20000"
+    depends_on:
+      proxy:
+        condition: service_healthy
+    networks:
+      - hypixel_network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "20000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  skyblockcore_hub:
+    restart: unless-stopped
+    image: game_server_base:latest
+    container_name: skyblockcore_hub
+    environment:
+      JAR_FILE: "SkyBlockCore.jar"
+      ARGS: "HUB"
+      PREVIEW_FLAG: "--enable-preview"
+    ports:
+      - "20001:20001"
+    depends_on:
+      proxy:
+        condition: service_healthy
+      skyblockcore_island:
+        condition: service_healthy
+    networks:
+      - hypixel_network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "20001"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  skyblockcore_farming:
+    restart: unless-stopped
+    image: game_server_base:latest
+    container_name: skyblockcore_farming
+    environment:
+      JAR_FILE: "SkyBlockCore.jar"
+      ARGS: "THE_FARMING_ISLANDS"
+      PREVIEW_FLAG: "--enable-preview"
+    ports:
+      - "20002:20002"
+    depends_on:
+      proxy:
+        condition: service_healthy
+      skyblockcore_island:
+        condition: service_healthy
+      skyblockcore_hub:
+        condition: service_healthy
+    networks:
+      - hypixel_network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "20002"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 
 volumes:
   mongodb-data:
     driver: local
-    name: mongo-data
 
 networks:
   hypixel_network:

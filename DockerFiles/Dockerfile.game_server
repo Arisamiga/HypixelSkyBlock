@@ -3,7 +3,7 @@ FROM openjdk:21-jdk-slim
 WORKDIR /app
 
 # Install unzip for extracting files
-RUN apt-get update && apt-get install -y jq unzip screen && apt-get clean
+RUN apt-get update && apt-get install -y jq unzip netcat-traditional && apt-get clean
 
 # Download SkyBlockCore.jar
 ADD https://github.com/Swofty-Developments/HypixelSkyBlock/releases/download/latest/SkyBlockCore.jar SkyBlockCore.jar
@@ -25,15 +25,22 @@ RUN ls -la configuration_files/ > test.txt
 # Copy resources.json
 RUN cp configuration_files/resources.json ./configuration/resources.json
 
+# Patch resources.json with correct host_name
+RUN host="0.0.0.0" && \
+    jq --arg host "$host" '.["host-name"] = $host' ./configuration/resources.json > ./configuration/resources.json.tmp && \
+    mv ./configuration/resources.json.tmp ./configuration/resources.json
+
+# Copy world files
 RUN cp configuration_files/world.zip ./world.zip
 
+# Unzip world files
 RUN unzip world.zip -d ./configuration && rm world.zip
 
 # Expose the required ports
 EXPOSE 25565 65535 8080 20000
 
 # Copy NanoLimbo
-RUN cp configuration_files/NanoLimbo-1.8.1.jar ./NanoLimbo-1.8.1.jar
+RUN cp configuration_files/NanoLimbo-1.9.1-all.jar ./NanoLimbo-1.9.1-all.jar
 
 # Copy the Nano Config
 RUN cp configuration_files/settings.yml ./settings.yml

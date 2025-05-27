@@ -7,7 +7,7 @@
   "spark": false,
   "require-authentication": false,
   "cross-version-support": true,
-  "host-name": "hypixel_game_server",
+  "host-name": "172.17.0.1",
   "transfer-timeout": "800",
   "sandbox-mode": true,
   "anticheat": true
