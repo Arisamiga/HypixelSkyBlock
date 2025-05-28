@@ -11,22 +11,21 @@ mv ./configuration/resources.json.tmp ./configuration/resources.json
 # Replace the secret in settings.yml
 sed -i "s/secret: '.*'/secret: '$secret'/" ./settings.yml
 
+# Start supervisord to manage the services
+exec /usr/bin/supervisord -c ./supervisord.conf
 
-# Clear any previously created Screens (Starting freshhh)
-screen -wipe
+# Wait for supervisord to start
+sleep 5
 
-# Start services in separate screen sessions
-screen -dmS SkyBlockCore_ISLAND java --enable-preview -jar SkyBlockCore.jar ISLAND
-sleep 20
-screen -dmS SkyBlockCore_HUB java --enable-preview -jar SkyBlockCore.jar HUB
-screen -dmS SkyBlockCore_FARMING java --enable-preview -jar SkyBlockCore.jar THE_FARMING_ISLANDS
-screen -dmS NanoLimbo java -jar NanoLimbo-1.9.1-all.jar
-screen -dmS ServiceAPI java -jar ServiceAPI.jar
-screen -dmS ServiceAuctionHouse java -jar ServiceAuctionHouse.jar
-screen -dmS ServiceBazaar java -jar ServiceBazaar.jar
-screen -dmS ServiceItemTracker java -jar ServiceItemTracker.jar
-
-echo "Started all services with a total of: $(screen -ls | grep -c 'Detached') screens"
+# Start specific services using supervisorctl
+supervisorctl start skyblockcore_island
+supervisorctl start skyblockcore_hub
+supervisorctl start skyblockcore_farming
+supervisorctl start nanolimbo
+supervisorctl start service_api
+supervisorctl start service_auctionhouse
+supervisorctl start service_bazaar
+supervisorctl start service_itemtracker
 
 # Keep the container running
 tail -f /dev/null

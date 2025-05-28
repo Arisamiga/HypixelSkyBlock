@@ -3,7 +3,7 @@ FROM openjdk:21-jdk-slim
 WORKDIR /app
 
 # Install unzip for extracting files
-RUN apt-get update && apt-get install -y jq unzip screen && apt-get clean
+RUN apt-get update && apt-get install -y jq unzip supervisor && apt-get clean
 
 # Download SkyBlockCore.jar
 ADD https://github.com/Swofty-Developments/HypixelSkyBlock/releases/download/latest/SkyBlockCore.jar SkyBlockCore.jar
@@ -37,6 +37,9 @@ RUN cp configuration_files/NanoLimbo-1.9.1-all.jar ./NanoLimbo-1.9.1-all.jar
 
 # Copy the Nano Config
 RUN cp configuration_files/settings.yml ./settings.yml
+
+# Copy the Supervisor Config
+RUN cp configuration_files/supervisord.conf ./supervisord.conf
 
 # Copy Songs Folder
 RUN cp -R configuration_files/songs ./configuration/songs
