@@ -1,7 +1,6 @@
 package net.swofty.type.generic.command.commands;
 
 import net.minestom.server.command.builder.arguments.Argument;
-import net.minestom.server.command.builder.arguments.ArgumentString;
 import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.command.builder.suggestion.SuggestionEntry;
 import net.minestom.server.utils.mojang.MojangUtils;
@@ -11,6 +10,7 @@ import net.swofty.type.generic.command.HypixelCommand;
 import net.swofty.type.generic.user.categories.Rank;
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.UUID;
 
 @CommandParameters(
@@ -25,12 +25,11 @@ public class UnBanCommand extends HypixelCommand {
     @Override
     public void registerUsage(MinestomCommand command) {
         Argument<String> argument = ArgumentType.String("player").setSuggestionCallback((sender, context, suggestion) -> {
-            PunishmentRedis.getAllBannedPlayerIds().thenAccept((id) -> {
-                for (String playerName : id) {
-                    UUID playerUuid = UUID.fromString(playerName);
-                    suggestion.addEntry(new SuggestionEntry(playerUuid.toString()));
-                }
-            });
+            if (!PunishmentRedis.isInitialized()) return;
+            Set<String> ids = PunishmentRedis.getAllBannedPlayerIds();
+            for (String playerId : ids) {
+                suggestion.addEntry(new SuggestionEntry(playerId));
+            }
         });
 
         command.addSyntax((sender, context) -> {

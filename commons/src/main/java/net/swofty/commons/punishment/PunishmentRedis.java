@@ -15,7 +15,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 public class PunishmentRedis {
     private static final String PREFIX = "punish:";
@@ -158,7 +157,7 @@ public class PunishmentRedis {
         if (expiresAt <= 0) {
             header = "§cYou are permanently muted on this server!\n";
         } else {
-            header = "§cYou are currently muted for muted for " + reason.getReasonString() + "\n";
+            header = "§cYou are currently muted for " + reason.getReasonString() + "\n";
         }
         String time = "§7Your mute will expire in §c" + prettyTimeLeft + "\n\n";
 
@@ -167,16 +166,20 @@ public class PunishmentRedis {
         return Component.text(line + header + time + urlInfo + footer + line);
     }
 
-    // lookup for all BANNED players
-    public static CompletableFuture<Set<String>> getAllBannedPlayerIds() {
-        return CompletableFuture.supplyAsync(() -> {
-            try (Jedis jedis = jedisPool.getResource()) {
-                Set<String> keys = jedis.keys(PREFIX + "active:*");
-                return keys.stream()
-                        .map(key -> key.substring((PREFIX + "active:").length()))
-                        .collect(Collectors.toSet());
-            }
-        });
+    public static Set<String> getAllBannedPlayerIds() {
+        try (Jedis jedis = jedisPool.getResource()) {
+            var cursor = "0";
+            Set<String> result = new java.util.HashSet<>();
+            var params = new redis.clients.jedis.params.ScanParams().match(PREFIX + "active:*").count(100);
+            do {
+                var scanResult = jedis.scan(cursor, params);
+                for (String key : scanResult.getResult()) {
+                    result.add(key.substring((PREFIX + "active:").length()));
+                }
+                cursor = scanResult.getCursor();
+            } while (!"0".equals(cursor));
+            return result;
+        }
     }
 
 }

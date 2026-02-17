@@ -1,13 +1,14 @@
 package net.swofty.commons.punishment;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import net.swofty.commons.punishment.template.BanType;
 import net.swofty.commons.punishment.template.MuteType;
-import net.swofty.commons.punishment.template.UnpunishReason;
 import org.jetbrains.annotations.Nullable;
 
 @Getter
+@NoArgsConstructor
 public class PunishmentReason {
     @Nullable
     private BanType banType;

@@ -36,8 +36,7 @@ public class PunishPlayerEndpoint implements ServiceEndpoint
         PunishmentId id = PunishmentId.generateId();
 
         Instant now = Instant.now();
-        Instant expiresAt = Instant.ofEpochMilli(messageObject.expiresAt());
-        if (expiresAt.isBefore(Instant.now())) {
+        if (messageObject.expiresAt() > 0 && Instant.ofEpochMilli(messageObject.expiresAt()).isBefore(now)) {
             return new PunishPlayerProtocolObject.PunishPlayerResponse(false, null, PunishPlayerProtocolObject.ErrorCode.INVALID_EXPIRY, "The expiration time provided is invalid.");
         }
 
@@ -62,7 +61,7 @@ public class PunishPlayerEndpoint implements ServiceEndpoint
                 messageObject.type(),
                 messageObject.target(),
                 reason.getReasonString(),
-                expiresAt.toString()
+                messageObject.expiresAt()
         );
         return new PunishPlayerProtocolObject.PunishPlayerResponse(true, id.id(), null, null);
     }
