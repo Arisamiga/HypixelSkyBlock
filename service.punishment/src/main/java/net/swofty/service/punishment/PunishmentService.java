@@ -6,12 +6,11 @@ import net.swofty.commons.punishment.PunishmentRedis;
 import net.swofty.service.generic.SkyBlockService;
 import net.swofty.service.generic.redis.ServiceEndpoint;
 
-import java.io.ObjectInputFilter;
 import java.util.List;
 
 public class PunishmentService implements SkyBlockService {
 
-    static void main() {
+    public static void main(String[] args) {
         String mongoUri = ConfigProvider.settings().getMongodb();
         new PunishmentDatabase(null).connect(mongoUri);
         SkyBlockService.init(new PunishmentService());

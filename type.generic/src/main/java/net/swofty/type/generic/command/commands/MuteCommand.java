@@ -20,6 +20,7 @@ import net.swofty.type.generic.command.HypixelCommand;
 import net.swofty.type.generic.user.categories.Rank;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -104,6 +105,7 @@ public class MuteCommand extends HypixelCommand {
                 PunishmentType.MUTE.name(),
                 reason,
                 senderUuid,
+                List.of(),
                 actualTime > 0 ? expiryTime : -1
         );
 

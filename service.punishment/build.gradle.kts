@@ -37,7 +37,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("net.swofty.service.punishment.FriendService")
+    mainClass.set("net.swofty.service.punishment.PunishmentService")
 }
 
 tasks {
