@@ -1,12 +1,9 @@
 package net.swofty.type.generic.command.commands;
 
-import net.minestom.server.command.builder.arguments.Argument;
 import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.entity.Player;
 import net.minestom.server.utils.mojang.MojangUtils;
-import net.minestom.server.command.builder.suggestion.SuggestionEntry;
 import net.swofty.commons.ServiceType;
-import net.swofty.commons.protocol.objects.punishment.GetAllBannedIdsProtocolObject;
 import net.swofty.commons.protocol.objects.punishment.UnpunishPlayerProtocolObject;
 import net.swofty.proxyapi.ProxyService;
 import net.swofty.type.generic.command.CommandParameters;
@@ -29,20 +26,7 @@ public class UnBanCommand extends HypixelCommand {
 
     @Override
     public void registerUsage(MinestomCommand command) {
-        Argument<String> argument = ArgumentType.String("player").setSuggestionCallback((sender, context, suggestion) -> {
-            try {
-                ProxyService service = new ProxyService(ServiceType.PUNISHMENT);
-                var response = service.handleRequest(new GetAllBannedIdsProtocolObject.GetAllBannedIdsMessage())
-                        .orTimeout(2, TimeUnit.SECONDS)
-                        .join();
-                if (response instanceof GetAllBannedIdsProtocolObject.GetAllBannedIdsResponse r) {
-                    for (String playerId : r.ids()) {
-                        suggestion.addEntry(new SuggestionEntry(playerId));
-                    }
-                }
-            } catch (Exception ignored) {
-            }
-        });
+        var argument = ArgumentType.String("player");
 
         command.addSyntax((sender, context) -> {
             String playerName = context.get(argument);
