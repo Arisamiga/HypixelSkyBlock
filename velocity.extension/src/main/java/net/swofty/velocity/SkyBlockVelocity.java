@@ -218,25 +218,27 @@ public class SkyBlockVelocity {
 		GameManager.loopServers(server);
 	}
 
-	public boolean punished(Player player) {
+	private boolean checkPunished(Player player) {
 		try {
-			var response = new ProxyService(ServiceType.PUNISHMENT)
-					.handleRequest(new GetActivePunishmentProtocolObject.GetActivePunishmentMessage(player.getUniqueId()))
-					.orTimeout(3, TimeUnit.SECONDS)
-					.join();
+			ProxyService service = new ProxyService(ServiceType.PUNISHMENT);
 
-			if (!(response instanceof GetActivePunishmentProtocolObject.GetActivePunishmentResponse r) || !r.found()) {
-				return false;
-			}
+			var banFuture = service.handleRequest(
+					new GetActivePunishmentProtocolObject.GetActivePunishmentMessage(player.getUniqueId(), PunishmentType.BAN.name()));
+			var muteFuture = service.handleRequest(
+					new GetActivePunishmentProtocolObject.GetActivePunishmentMessage(player.getUniqueId(), PunishmentType.MUTE.name()));
 
-			ActivePunishment punishment = new ActivePunishment(
-					r.type(), r.banId(), r.reason(), r.expiresAt(), r.tags());
-			PunishmentType type = PunishmentType.valueOf(r.type());
-			if (type == PunishmentType.BAN) {
+			CompletableFuture.allOf(banFuture, muteFuture).orTimeout(3, TimeUnit.SECONDS).join();
+
+			var banResponse = banFuture.join();
+			if (banResponse instanceof GetActivePunishmentProtocolObject.GetActivePunishmentResponse r && r.found()) {
+				ActivePunishment punishment = new ActivePunishment(r.type(), r.banId(), r.reason(), r.expiresAt(), r.tags());
 				player.disconnect(PunishmentMessages.banMessage(punishment));
 				return true;
 			}
-			if (type == PunishmentType.MUTE) {
+
+			var muteResponse = muteFuture.join();
+			if (muteResponse instanceof GetActivePunishmentProtocolObject.GetActivePunishmentResponse r && r.found()) {
+				ActivePunishment punishment = new ActivePunishment(r.type(), r.banId(), r.reason(), r.expiresAt(), r.tags());
 				player.sendMessage(PunishmentMessages.muteMessage(punishment));
 			}
 			return false;
@@ -246,10 +248,11 @@ public class SkyBlockVelocity {
 	}
 
 	@Subscribe
-	public void onPlayerJoin(PlayerChooseInitialServerEvent event) {
+	public EventTask onPlayerJoin(PlayerChooseInitialServerEvent event) {
+		return EventTask.async(() -> {
 		Player player = event.getPlayer();
 
-		if (punished(player)) {
+		if (checkPunished(player)) {
 			return;
 		}
 
@@ -311,11 +314,12 @@ public class SkyBlockVelocity {
 					FromProxyChannels.PROMPT_PLAYER_FOR_AUTHENTICATION,
 					new JSONObject().put("uuid", player.getUniqueId().toString()));
 		}
+		});
 	}
 
 	@Subscribe
 	public void onServerCrash(KickedFromServerEvent event) {
-		if (punished(event.getPlayer())) {
+		if (checkPunished(event.getPlayer())) {
 			return;
 		}
 

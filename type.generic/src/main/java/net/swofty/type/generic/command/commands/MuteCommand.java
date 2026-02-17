@@ -1,10 +1,7 @@
 package net.swofty.type.generic.command.commands;
 
 import net.kyori.adventure.text.Component;
-import net.minestom.server.command.CommandSender;
 import net.minestom.server.command.builder.arguments.Argument;
-import net.minestom.server.entity.Player;
-import net.minestom.server.utils.mojang.MojangUtils;
 import net.minestom.server.command.builder.arguments.ArgumentString;
 import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.command.builder.suggestion.SuggestionEntry;
@@ -17,6 +14,7 @@ import net.swofty.commons.punishment.template.MuteType;
 import net.swofty.proxyapi.ProxyService;
 import net.swofty.type.generic.command.CommandParameters;
 import net.swofty.type.generic.command.HypixelCommand;
+import net.swofty.type.generic.user.HypixelPlayer;
 import net.swofty.type.generic.user.categories.Rank;
 
 import java.io.IOException;
@@ -30,7 +28,7 @@ import java.util.concurrent.TimeUnit;
         permission = Rank.STAFF,
         description = "Mute a player from the server.",
         usage = "/mute <player> [duration] <reason>",
-        allowsConsole = true
+        allowsConsole = false
 )
 public class MuteCommand extends HypixelCommand {
 
@@ -45,38 +43,54 @@ public class MuteCommand extends HypixelCommand {
         });
 
         command.addSyntax((sender, context) -> {
+            HypixelPlayer player = (HypixelPlayer) sender;
             String playerName = context.get(playerArg);
             String duration = context.get(durationArg);
-            MuteType type = MuteType.valueOf(context.get(reasonArg));
+
+            MuteType type;
+            try {
+                type = MuteType.valueOf(context.get(reasonArg));
+            } catch (IllegalArgumentException e) {
+                player.sendMessage("§cInvalid mute reason. Use tab-completion to see valid options.");
+                return;
+            }
 
             CompletableFuture.runAsync(() -> {
                 try {
-                    UUID targetUuid = MojangUtils.getUUID(playerName);
+                    UUID targetUuid = net.minestom.server.utils.mojang.MojangUtils.getUUID(playerName);
                     long actualTime = StringUtility.parseDuration(duration);
                     long expiryTime = System.currentTimeMillis() + actualTime;
-                    mutePlayer(sender, targetUuid, type, (sender instanceof Player p ? p.getUuid() : new UUID(0, 0)), actualTime, expiryTime, playerName);
+                    mutePlayer(player, targetUuid, type, player.getUuid(), actualTime, expiryTime, playerName);
                 } catch (IOException e) {
-                    sender.sendMessage("§cCould not find player: " + playerName);
+                    player.sendMessage("§cCould not find player: " + playerName);
                 }
             });
         }, playerArg, durationArg, reasonArg);
 
         command.addSyntax((sender, context) -> {
+            HypixelPlayer player = (HypixelPlayer) sender;
             String playerName = context.get(playerArg);
-            MuteType reason = MuteType.valueOf(context.get(reasonArg));
+
+            MuteType reason;
+            try {
+                reason = MuteType.valueOf(context.get(reasonArg));
+            } catch (IllegalArgumentException e) {
+                player.sendMessage("§cInvalid mute reason. Use tab-completion to see valid options.");
+                return;
+            }
 
             CompletableFuture.runAsync(() -> {
                 try {
-                    mutePlayer(sender, MojangUtils.getUUID(playerName), reason,
-                            (sender instanceof Player p ? p.getUuid() : new UUID(0, 0)), 0, -1, playerName);
+                    mutePlayer(player, net.minestom.server.utils.mojang.MojangUtils.getUUID(playerName), reason,
+                            player.getUuid(), 0, -1, playerName);
                 } catch (IOException e) {
-                    sender.sendMessage("§cCould not find player: " + playerName);
+                    player.sendMessage("§cCould not find player: " + playerName);
                 }
             });
         }, playerArg, reasonArg);
     }
 
-    private void mutePlayer(CommandSender sender, UUID targetUuid, MuteType type, UUID senderUuid,
+    private void mutePlayer(HypixelPlayer sender, UUID targetUuid, MuteType type, UUID senderUuid,
                             long actualTime, long expiryTime, String playerName) {
         ProxyService punishmentService = new ProxyService(ServiceType.PUNISHMENT);
         PunishmentReason reason = new PunishmentReason(type);
@@ -94,7 +108,7 @@ public class MuteCommand extends HypixelCommand {
                 if (response.success()) {
                     sender.sendMessage("§aSuccessfully muted player §e" + playerName + "§a. §8Punishment ID: §7" + response.punishmentId());
                 } else if (response.errorCode() == PunishPlayerProtocolObject.ErrorCode.ALREADY_PUNISHED) {
-                    sender.sendMessage("§cThis player already has an active punishment. Punishment ID: §7" + response.errorMessage());
+                    sender.sendMessage("§cThis player already has an active mute. Punishment ID: §7" + response.errorMessage());
                 } else {
                     sender.sendMessage("§cFailed to mute player: " + response.errorMessage());
                 }

@@ -16,13 +16,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @CommandParameters(
-        description = "Unban a player from the server.",
-        usage = "/unban <player>",
-        aliases = "unban pardon unbanip pardonip",
+        description = "Unmute a player on the server.",
+        usage = "/unmute <player>",
+        aliases = "unmute",
         permission = Rank.STAFF,
         allowsConsole = false
 )
-public class UnBanCommand extends HypixelCommand {
+public class UnMuteCommand extends HypixelCommand {
 
     @Override
     public void registerUsage(MinestomCommand command) {
@@ -37,19 +37,19 @@ public class UnBanCommand extends HypixelCommand {
                     var targetUuid = MojangUtils.getUUID(playerName);
                     ProxyService punishmentService = new ProxyService(ServiceType.PUNISHMENT);
                     var message = new UnpunishPlayerProtocolObject.UnpunishPlayerMessage(
-                            targetUuid, player.getUuid(), PunishmentType.BAN.name()
+                            targetUuid, player.getUuid(), PunishmentType.MUTE.name()
                     );
 
                     punishmentService.handleRequest(message).thenAccept(result -> {
                         if (result instanceof UnpunishPlayerProtocolObject.UnpunishPlayerResponse response) {
                             if (response.success()) {
-                                player.sendMessage("§aSuccessfully unbanned player: " + playerName);
+                                player.sendMessage("§aSuccessfully unmuted player: " + playerName);
                             } else {
                                 player.sendMessage("§c" + response.errorMessage());
                             }
                         }
                     }).orTimeout(5, TimeUnit.SECONDS).exceptionally(_ -> {
-                        player.sendMessage("§cCould not unban this player at this time. The punishment service may be offline.");
+                        player.sendMessage("§cCould not unmute this player at this time. The punishment service may be offline.");
                         return null;
                     });
                 } catch (IOException e) {

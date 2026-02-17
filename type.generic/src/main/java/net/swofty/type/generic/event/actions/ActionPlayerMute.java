@@ -21,12 +21,12 @@ public class ActionPlayerMute implements HypixelEventClass {
         Player player = event.getPlayer();
         try {
             var response = new ProxyService(ServiceType.PUNISHMENT)
-                    .handleRequest(new GetActivePunishmentProtocolObject.GetActivePunishmentMessage(player.getUuid()))
+                    .handleRequest(new GetActivePunishmentProtocolObject.GetActivePunishmentMessage(
+                            player.getUuid(), PunishmentType.MUTE.name()))
                     .orTimeout(2, TimeUnit.SECONDS)
                     .join();
 
-            if (response instanceof GetActivePunishmentProtocolObject.GetActivePunishmentResponse r
-                    && r.found() && PunishmentType.valueOf(r.type()) == PunishmentType.MUTE) {
+            if (response instanceof GetActivePunishmentProtocolObject.GetActivePunishmentResponse r && r.found()) {
                 event.setCancelled(true);
                 var punishment = new ActivePunishment(r.type(), r.banId(), r.reason(), r.expiresAt(), r.tags());
                 player.sendMessage(PunishmentMessages.muteMessage(punishment));
