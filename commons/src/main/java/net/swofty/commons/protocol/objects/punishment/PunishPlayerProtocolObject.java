@@ -115,6 +115,7 @@ public class PunishPlayerProtocolObject
         INVALID_TYPE,
         DATABASE_ERROR,
         INVALID_EXPIRY,
+        ALREADY_PUNISHED,
         UNKNOWN_ERROR
     }
 }

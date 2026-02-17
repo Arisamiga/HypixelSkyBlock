@@ -11,7 +11,7 @@ import org.json.JSONObject;
 import org.tinylog.Logger;
 
 import java.time.Instant;
-import java.util.UUID;
+import java.util.Optional;
 
 public class PunishPlayerEndpoint implements ServiceEndpoint
         <PunishPlayerProtocolObject.PunishPlayerMessage,
@@ -24,21 +24,33 @@ public class PunishPlayerEndpoint implements ServiceEndpoint
 
     @Override
     public PunishPlayerProtocolObject.PunishPlayerResponse onMessage(ServiceProxyRequest message, PunishPlayerProtocolObject.PunishPlayerMessage messageObject) {
-        Logger.info("PunishPlayerEndpoint onMessage");
+        PunishmentType punishmentType;
         try {
-            // Validate punishment type
-            PunishmentType.valueOf(messageObject.type());
+            punishmentType = PunishmentType.valueOf(messageObject.type());
         } catch (IllegalArgumentException e) {
             return new PunishPlayerProtocolObject.PunishPlayerResponse(false, null, PunishPlayerProtocolObject.ErrorCode.INVALID_TYPE, "The punishment type provided is invalid.");
         }
-
-        PunishmentReason reason = messageObject.reason();
-        PunishmentId id = PunishmentId.generateId();
 
         Instant now = Instant.now();
         if (messageObject.expiresAt() > 0 && Instant.ofEpochMilli(messageObject.expiresAt()).isBefore(now)) {
             return new PunishPlayerProtocolObject.PunishPlayerResponse(false, null, PunishPlayerProtocolObject.ErrorCode.INVALID_EXPIRY, "The expiration time provided is invalid.");
         }
+
+        boolean hasOverwriteTag = messageObject.tags() != null && messageObject.tags().contains(PunishmentTag.OVERWRITE);
+        if (!hasOverwriteTag) {
+            Optional<PunishmentRedis.ActivePunishment> existing = PunishmentRedis.getActive(messageObject.target());
+            if (existing.isPresent()) {
+                PunishmentRedis.ActivePunishment active = existing.get();
+                PunishmentType existingType = PunishmentType.valueOf(active.type());
+                if (existingType == punishmentType) {
+                    return new PunishPlayerProtocolObject.PunishPlayerResponse(false, null,
+                            PunishPlayerProtocolObject.ErrorCode.ALREADY_PUNISHED, active.banId());
+                }
+            }
+        }
+
+        PunishmentReason reason = messageObject.reason();
+        PunishmentId id = PunishmentId.generateId();
 
         PunishmentRedis.saveActivePunishment(
                 messageObject.target(),
@@ -47,7 +59,7 @@ public class PunishPlayerEndpoint implements ServiceEndpoint
                 reason,
                 messageObject.expiresAt()
         );
-        sendMessageToProxy(ToProxyChannels.PUNISH_PLAYER, new JSONObject()
+        ProxyRedis.publishToProxy(ToProxyChannels.PUNISH_PLAYER, new JSONObject()
                 .put("target", messageObject.target())
                 .put("type", messageObject.type())
                 .put("id", id.id())
@@ -64,13 +76,5 @@ public class PunishPlayerEndpoint implements ServiceEndpoint
                 messageObject.expiresAt()
         );
         return new PunishPlayerProtocolObject.PunishPlayerResponse(true, id.id(), null, null);
-    }
-
-    public static void sendMessageToProxy(ToProxyChannels channel, JSONObject message) {
-        UUID uuid = UUID.randomUUID();
-
-        ProxyRedis.publishMessage("proxy",
-                channel.getChannelName(),
-                message.toString() + "}=-=-={" + uuid + "}=-=-={" + uuid);
     }
 }

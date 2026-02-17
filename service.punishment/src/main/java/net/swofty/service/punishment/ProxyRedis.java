@@ -4,8 +4,12 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
+import net.swofty.commons.proxy.ToProxyChannels;
+import org.json.JSONObject;
+
 import java.net.URI;
 import java.time.Duration;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class ProxyRedis {
@@ -57,6 +61,12 @@ public class ProxyRedis {
                 throw new RuntimeException("Failed to publish message to Redis", ex);
             }
         });
+    }
+
+    public static void publishToProxy(ToProxyChannels channel, JSONObject message) {
+        UUID uuid = UUID.randomUUID();
+        publishMessage("proxy", channel.getChannelName(),
+                message.toString() + "}=-=-={" + uuid + "}=-=-={" + uuid);
     }
 
     public static boolean isInitialized() {
