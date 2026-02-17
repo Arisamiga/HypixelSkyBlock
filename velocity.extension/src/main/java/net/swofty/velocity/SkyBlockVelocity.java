@@ -230,7 +230,7 @@ public class SkyBlockVelocity {
 			}
 
 			ActivePunishment punishment = new ActivePunishment(
-					r.type(), r.banId(), r.reason(), r.expiresAt());
+					r.type(), r.banId(), r.reason(), r.expiresAt(), r.tags());
 			PunishmentType type = PunishmentType.valueOf(r.type());
 			if (type == PunishmentType.BAN) {
 				player.disconnect(PunishmentMessages.banMessage(punishment));

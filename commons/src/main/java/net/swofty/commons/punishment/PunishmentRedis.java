@@ -10,7 +10,6 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -61,17 +60,20 @@ public class PunishmentRedis {
         return initialized && jedisPool != null && !jedisPool.isClosed();
     }
 
-    public static void saveActivePunishment(UUID playerId, String type, String id, PunishmentReason reason, long expiresAt) {
+    public static void saveActivePunishment(UUID playerId, String type, String id, PunishmentReason reason, long expiresAt, java.util.List<PunishmentTag> tags) {
         try (Jedis jedis = jedisPool.getResource()) {
             String key = PREFIX + "active:" + playerId;
 
             Gson gson = new Gson();
-            Map<String, String> data = Map.of(
+            java.util.HashMap<String, String> data = new java.util.HashMap<>(Map.of(
                     "type", type,
                     "banId", id,
-                    "reason", gson.toJson(reason), // most likely not optimal for performance
+                    "reason", gson.toJson(reason),
                     "expiresAt", String.valueOf(expiresAt)
-            );
+            ));
+            if (tags != null && !tags.isEmpty()) {
+                data.put("tags", gson.toJson(tags));
+            }
 
             jedis.hset(key, data);
             if (expiresAt > 0) {
@@ -100,9 +102,15 @@ public class PunishmentRedis {
             }
 
             Gson gson = new Gson();
-            PunishmentReason reason = gson.fromJson(data.get("reason"), PunishmentReason.class); // most likely not optimal for performance
+            PunishmentReason reason = gson.fromJson(data.get("reason"), PunishmentReason.class);
 
-            return Optional.of(new ActivePunishment(type, banId, reason, expiresAt));
+            java.util.List<PunishmentTag> tags = java.util.List.of();
+            String tagsJson = data.get("tags");
+            if (tagsJson != null && !tagsJson.isBlank()) {
+                tags = java.util.List.of(gson.fromJson(tagsJson, PunishmentTag[].class));
+            }
+
+            return Optional.of(new ActivePunishment(type, banId, reason, expiresAt, tags));
         }
     }
 
@@ -114,21 +122,4 @@ public class PunishmentRedis {
             }
         });
     }
-
-    public static Set<String> getAllBannedPlayerIds() {
-        try (Jedis jedis = jedisPool.getResource()) {
-            var cursor = "0";
-            Set<String> result = new java.util.HashSet<>();
-            var params = new redis.clients.jedis.params.ScanParams().match(PREFIX + "active:*").count(100);
-            do {
-                var scanResult = jedis.scan(cursor, params);
-                for (String key : scanResult.getResult()) {
-                    result.add(key.substring((PREFIX + "active:").length()));
-                }
-                cursor = scanResult.getCursor();
-            } while (!"0".equals(cursor));
-            return result;
-        }
-    }
-
 }

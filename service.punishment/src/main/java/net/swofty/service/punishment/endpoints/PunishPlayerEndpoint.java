@@ -57,7 +57,8 @@ public class PunishPlayerEndpoint implements ServiceEndpoint
                 messageObject.type(),
                 id.id(),
                 reason,
-                messageObject.expiresAt()
+                messageObject.expiresAt(),
+                messageObject.tags()
         );
         ProxyRedis.publishToProxy(ToProxyChannels.PUNISH_PLAYER, new JSONObject()
                 .put("target", messageObject.target())

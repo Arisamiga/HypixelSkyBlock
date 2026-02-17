@@ -54,7 +54,7 @@ public class ListenerPlayerPunished extends RedisListener {
         PunishmentType punishmentType = PunishmentType.valueOf(type);
         PunishmentReason finalReason = reason;
         SkyBlockVelocity.getServer().getPlayer(target).ifPresent((player) -> {
-            ActivePunishment activePunishment = new ActivePunishment(type, id, finalReason, expiresAt);
+            ActivePunishment activePunishment = new ActivePunishment(type, id, finalReason, expiresAt, java.util.List.of());
             switch (punishmentType) {
                 case BAN -> {
                     player.disconnect(PunishmentMessages.banMessage(activePunishment));

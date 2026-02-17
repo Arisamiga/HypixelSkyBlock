@@ -28,7 +28,7 @@ public class ActionPlayerMute implements HypixelEventClass {
             if (response instanceof GetActivePunishmentProtocolObject.GetActivePunishmentResponse r
                     && r.found() && PunishmentType.valueOf(r.type()) == PunishmentType.MUTE) {
                 event.setCancelled(true);
-                var punishment = new ActivePunishment(r.type(), r.banId(), r.reason(), r.expiresAt());
+                var punishment = new ActivePunishment(r.type(), r.banId(), r.reason(), r.expiresAt(), r.tags());
                 player.sendMessage(PunishmentMessages.muteMessage(punishment));
             }
         } catch (Exception ignored) {
