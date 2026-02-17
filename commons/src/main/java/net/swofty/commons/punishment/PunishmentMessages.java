@@ -11,13 +11,12 @@ public final class PunishmentMessages {
         PunishmentReason reason = punishment.reason();
         String banId = punishment.banId();
 
-        long timeLeft = expiresAt - System.currentTimeMillis();
-        String prettyTimeLeft = StringUtility.formatTimeLeft(timeLeft);
-
         String header;
         if (expiresAt <= 0) {
             header = "§cYou are permanently banned from this server!\n";
         } else {
+            long timeLeft = expiresAt - System.currentTimeMillis();
+            String prettyTimeLeft = StringUtility.formatTimeLeft(timeLeft);
             header = "§cYou are temporarily banned for §f" + prettyTimeLeft + " §cfrom this server!\n";
         }
 

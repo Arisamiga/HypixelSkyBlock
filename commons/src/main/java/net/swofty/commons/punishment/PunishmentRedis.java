@@ -8,13 +8,12 @@ import redis.clients.jedis.JedisPoolConfig;
 
 import java.net.URI;
 import java.time.Duration;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class PunishmentRedis {
-    private static final String PREFIX = "punish:";
+    private static final String PREFIX = "punish:active:";
+    private static final Gson GSON = new Gson();
     private static JedisPool jedisPool;
     private static volatile boolean initialized = false;
     private static volatile boolean connecting = false;
@@ -40,7 +39,6 @@ public class PunishmentRedis {
             URI uri = URI.create(redisUri);
             jedisPool = new JedisPool(poolConfig, uri);
 
-            // Test connection
             try (Jedis jedis = jedisPool.getResource()) {
                 jedis.ping();
             }
@@ -60,66 +58,84 @@ public class PunishmentRedis {
         return initialized && jedisPool != null && !jedisPool.isClosed();
     }
 
-    public static void saveActivePunishment(UUID playerId, String type, String id, PunishmentReason reason, long expiresAt, java.util.List<PunishmentTag> tags) {
-        try (Jedis jedis = jedisPool.getResource()) {
-            String key = PREFIX + "active:" + playerId;
+    private static String key(UUID playerId, String type) {
+        return PREFIX + playerId + ":" + type;
+    }
 
-            Gson gson = new Gson();
-            java.util.HashMap<String, String> data = new java.util.HashMap<>(Map.of(
+    public static void saveActivePunishment(UUID playerId, String type, String id,
+                                            PunishmentReason reason, long expiresAt,
+                                            List<PunishmentTag> tags) {
+        if (!isInitialized()) throw new IllegalStateException("PunishmentRedis not initialized");
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            String k = key(playerId, type);
+
+            HashMap<String, String> data = new HashMap<>(Map.of(
                     "type", type,
                     "banId", id,
-                    "reason", gson.toJson(reason),
+                    "reason", GSON.toJson(reason),
                     "expiresAt", String.valueOf(expiresAt)
             ));
             if (tags != null && !tags.isEmpty()) {
-                data.put("tags", gson.toJson(tags));
+                data.put("tags", GSON.toJson(tags));
             }
 
-            jedis.hset(key, data);
+            jedis.hset(k, data);
             if (expiresAt > 0) {
                 long ttlSeconds = (expiresAt - System.currentTimeMillis()) / 1000;
                 if (ttlSeconds > 0) {
-                    jedis.expire(key, (int) ttlSeconds);
+                    jedis.expire(k, (int) ttlSeconds);
                 }
+            } else {
+                jedis.persist(k);
             }
         }
     }
 
-    public static Optional<ActivePunishment> getActive(UUID playerId) {
+    public static Optional<ActivePunishment> getActive(UUID playerId, String type) {
+        if (!isInitialized()) return Optional.empty();
+
         try (Jedis jedis = jedisPool.getResource()) {
-            String key = PREFIX + "active:" + playerId;
-            Map<String, String> data = jedis.hgetAll(key);
+            String k = key(playerId, type);
+            Map<String, String> data = jedis.hgetAll(k);
 
             if (data.isEmpty()) return Optional.empty();
 
-            String type = data.get("type");
             String banId = data.get("banId");
             long expiresAt = Long.parseLong(data.getOrDefault("expiresAt", "-1"));
 
             if (expiresAt > 0 && System.currentTimeMillis() > expiresAt) {
-                jedis.del(key); // clean up expired
+                jedis.del(k);
                 return Optional.empty();
             }
 
-            Gson gson = new Gson();
-            PunishmentReason reason = gson.fromJson(data.get("reason"), PunishmentReason.class);
+            PunishmentReason reason = GSON.fromJson(data.get("reason"), PunishmentReason.class);
 
-            java.util.List<PunishmentTag> tags = java.util.List.of();
+            List<PunishmentTag> tags = List.of();
             String tagsJson = data.get("tags");
             if (tagsJson != null && !tagsJson.isBlank()) {
-                tags = java.util.List.of(gson.fromJson(tagsJson, PunishmentTag[].class));
+                tags = List.of(GSON.fromJson(tagsJson, PunishmentTag[].class));
             }
 
             return Optional.of(new ActivePunishment(type, banId, reason, expiresAt, tags));
         }
     }
 
-    public static CompletableFuture<Long> revoke(UUID playerId) {
-        return CompletableFuture.supplyAsync(() -> {
-            try (Jedis jedis = jedisPool.getResource()) {
-                String key = PREFIX + "active:" + playerId;
-                return jedis.del(key);
-            }
-        });
+    public static List<ActivePunishment> getAllActive(UUID playerId) {
+        if (!isInitialized()) return List.of();
+
+        List<ActivePunishment> result = new ArrayList<>();
+        for (PunishmentType pt : PunishmentType.values()) {
+            getActive(playerId, pt.name()).ifPresent(result::add);
+        }
+        return result;
+    }
+
+    public static void revoke(UUID playerId, String type) {
+        if (!isInitialized()) throw new IllegalStateException("PunishmentRedis not initialized");
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.del(key(playerId, type));
+        }
     }
 }
