@@ -48,7 +48,6 @@ import net.swofty.type.generic.packet.HypixelPacketClientListener;
 import net.swofty.type.generic.packet.HypixelPacketServerListener;
 import net.swofty.type.generic.quest.QuestRegistry;
 import net.swofty.type.generic.redis.RedisOriginServer;
-import net.swofty.type.generic.terminal.MinestomTerminal;
 import net.swofty.type.generic.user.HypixelPlayer;
 import org.jetbrains.annotations.Nullable;
 import org.reflections.Reflections;
@@ -248,13 +247,6 @@ public record HypixelGenericLoader(HypixelTypeLoader loader) {
             });
         }
 
-        if (ConfigProvider.settings().isTerminal()) {
-            try (MinestomTerminal terminal = new MinestomTerminal(MinecraftServer.getCommandManager())) {
-                terminal.start();
-            } catch (Exception e) {
-                Logger.warn(e, "Failed to start Minestom terminal.");
-            }
-        }
     }
 
     public static List<HypixelPlayer> getLoadedPlayers() {
