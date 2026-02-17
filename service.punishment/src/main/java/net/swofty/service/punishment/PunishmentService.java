@@ -10,7 +10,7 @@ import java.util.List;
 
 public class PunishmentService implements SkyBlockService {
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         String mongoUri = ConfigProvider.settings().getMongodb();
         new PunishmentDatabase(null).connect(mongoUri);
         SkyBlockService.init(new PunishmentService());
