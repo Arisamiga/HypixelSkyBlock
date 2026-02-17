@@ -39,8 +39,8 @@ import net.swofty.commons.config.Settings;
 import net.swofty.commons.protocol.ProtocolObject;
 import net.swofty.commons.protocol.objects.punishment.GetActivePunishmentProtocolObject;
 import net.swofty.commons.proxy.FromProxyChannels;
+import net.swofty.commons.punishment.ActivePunishment;
 import net.swofty.commons.punishment.PunishmentMessages;
-import net.swofty.commons.punishment.PunishmentRedis;
 import net.swofty.commons.punishment.PunishmentType;
 import net.swofty.proxyapi.ProxyService;
 import net.swofty.proxyapi.redis.ServerOutboundMessage;
@@ -229,7 +229,7 @@ public class SkyBlockVelocity {
 				return false;
 			}
 
-			PunishmentRedis.ActivePunishment punishment = new PunishmentRedis.ActivePunishment(
+			ActivePunishment punishment = new ActivePunishment(
 					r.type(), r.banId(), r.reason(), r.expiresAt());
 			PunishmentType type = PunishmentType.valueOf(r.type());
 			if (type == PunishmentType.BAN) {

@@ -4,8 +4,8 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerChatEvent;
 import net.swofty.commons.ServiceType;
 import net.swofty.commons.protocol.objects.punishment.GetActivePunishmentProtocolObject;
+import net.swofty.commons.punishment.ActivePunishment;
 import net.swofty.commons.punishment.PunishmentMessages;
-import net.swofty.commons.punishment.PunishmentRedis;
 import net.swofty.commons.punishment.PunishmentType;
 import net.swofty.proxyapi.ProxyService;
 import net.swofty.type.generic.event.EventNodes;
@@ -28,7 +28,7 @@ public class ActionPlayerMute implements HypixelEventClass {
             if (response instanceof GetActivePunishmentProtocolObject.GetActivePunishmentResponse r
                     && r.found() && PunishmentType.valueOf(r.type()) == PunishmentType.MUTE) {
                 event.setCancelled(true);
-                var punishment = new PunishmentRedis.ActivePunishment(r.type(), r.banId(), r.reason(), r.expiresAt());
+                var punishment = new ActivePunishment(r.type(), r.banId(), r.reason(), r.expiresAt());
                 player.sendMessage(PunishmentMessages.muteMessage(punishment));
             }
         } catch (Exception ignored) {

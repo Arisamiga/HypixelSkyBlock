@@ -38,9 +38,9 @@ public class PunishPlayerEndpoint implements ServiceEndpoint
 
         boolean hasOverwriteTag = messageObject.tags() != null && messageObject.tags().contains(PunishmentTag.OVERWRITE);
         if (!hasOverwriteTag) {
-            Optional<PunishmentRedis.ActivePunishment> existing = PunishmentRedis.getActive(messageObject.target());
+            Optional<ActivePunishment> existing = PunishmentRedis.getActive(messageObject.target());
             if (existing.isPresent()) {
-                PunishmentRedis.ActivePunishment active = existing.get();
+                ActivePunishment active = existing.get();
                 PunishmentType existingType = PunishmentType.valueOf(active.type());
                 if (existingType == punishmentType) {
                     return new PunishPlayerProtocolObject.PunishPlayerResponse(false, null,

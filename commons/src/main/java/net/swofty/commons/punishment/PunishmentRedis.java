@@ -115,8 +115,6 @@ public class PunishmentRedis {
         });
     }
 
-    public record ActivePunishment(String type, String banId, PunishmentReason reason, long expiresAt) {}
-
     public static Set<String> getAllBannedPlayerIds() {
         try (Jedis jedis = jedisPool.getResource()) {
             var cursor = "0";

@@ -6,8 +6,8 @@ import net.kyori.adventure.text.Component;
 import net.swofty.commons.proxy.ToProxyChannels;
 import net.swofty.commons.punishment.PunishmentId;
 import net.swofty.commons.punishment.PunishmentReason;
+import net.swofty.commons.punishment.ActivePunishment;
 import net.swofty.commons.punishment.PunishmentMessages;
-import net.swofty.commons.punishment.PunishmentRedis;
 import net.swofty.commons.punishment.PunishmentType;
 import net.swofty.commons.punishment.template.BanType;
 import net.swofty.commons.punishment.template.MuteType;
@@ -54,7 +54,7 @@ public class ListenerPlayerPunished extends RedisListener {
         PunishmentType punishmentType = PunishmentType.valueOf(type);
         PunishmentReason finalReason = reason;
         SkyBlockVelocity.getServer().getPlayer(target).ifPresent((player) -> {
-            PunishmentRedis.ActivePunishment activePunishment = new PunishmentRedis.ActivePunishment(type, id, finalReason, expiresAt);
+            ActivePunishment activePunishment = new ActivePunishment(type, id, finalReason, expiresAt);
             switch (punishmentType) {
                 case BAN -> {
                     player.disconnect(PunishmentMessages.banMessage(activePunishment));
