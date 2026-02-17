@@ -5,7 +5,6 @@ import net.swofty.commons.protocol.ProtocolObject;
 import net.swofty.commons.protocol.objects.punishment.UnpunishPlayerProtocolObject;
 import net.swofty.commons.punishment.ActivePunishment;
 import net.swofty.commons.punishment.PunishmentRedis;
-import net.swofty.commons.punishment.PunishmentType;
 import net.swofty.service.generic.redis.ServiceEndpoint;
 import org.tinylog.Logger;
 
@@ -22,20 +21,20 @@ public class UnpunishPlayerEndpoint implements ServiceEndpoint
 
     @Override
     public UnpunishPlayerProtocolObject.UnpunishPlayerResponse onMessage(ServiceProxyRequest message, UnpunishPlayerProtocolObject.UnpunishPlayerMessage messageObject) {
-        Optional<ActivePunishment> existing = PunishmentRedis.getActive(messageObject.target());
+        Optional<ActivePunishment> existing = PunishmentRedis.getActive(messageObject.target(), messageObject.type());
         if (existing.isEmpty()) {
-            return new UnpunishPlayerProtocolObject.UnpunishPlayerResponse(false, "No active punishment found for this player.");
+            return new UnpunishPlayerProtocolObject.UnpunishPlayerResponse(false, "No active " + messageObject.type().toLowerCase() + " found for this player.");
         }
 
-        ActivePunishment punishment = existing.get();
-        PunishmentType type = PunishmentType.valueOf(punishment.type());
-        if (type != PunishmentType.BAN) {
-            return new UnpunishPlayerProtocolObject.UnpunishPlayerResponse(false, "Player is not banned (active punishment is " + type.name() + ").");
+        try {
+            PunishmentRedis.revoke(messageObject.target(), messageObject.type());
+        } catch (Exception e) {
+            Logger.error("Failed to revoke punishment", e);
+            return new UnpunishPlayerProtocolObject.UnpunishPlayerResponse(false, "Failed to revoke punishment from database.");
         }
 
-        PunishmentRedis.revoke(messageObject.target()).join();
-        Logger.info("Revoked ban for {} by staff {}",
-                messageObject.target(), messageObject.staff());
+        Logger.info("Revoked {} for {} by staff {}",
+                messageObject.type(), messageObject.target(), messageObject.staff());
         return new UnpunishPlayerProtocolObject.UnpunishPlayerResponse(true, null);
     }
 }

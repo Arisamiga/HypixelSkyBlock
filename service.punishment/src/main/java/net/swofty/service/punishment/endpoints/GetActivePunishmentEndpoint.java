@@ -7,6 +7,7 @@ import net.swofty.commons.punishment.ActivePunishment;
 import net.swofty.commons.punishment.PunishmentRedis;
 import net.swofty.service.generic.redis.ServiceEndpoint;
 
+import java.util.List;
 import java.util.Optional;
 
 public class GetActivePunishmentEndpoint implements ServiceEndpoint
@@ -20,9 +21,9 @@ public class GetActivePunishmentEndpoint implements ServiceEndpoint
 
     @Override
     public GetActivePunishmentProtocolObject.GetActivePunishmentResponse onMessage(ServiceProxyRequest message, GetActivePunishmentProtocolObject.GetActivePunishmentMessage messageObject) {
-        Optional<ActivePunishment> existing = PunishmentRedis.getActive(messageObject.target());
+        Optional<ActivePunishment> existing = PunishmentRedis.getActive(messageObject.target(), messageObject.type());
         if (existing.isEmpty()) {
-            return new GetActivePunishmentProtocolObject.GetActivePunishmentResponse(false, null, null, null, 0, java.util.List.of());
+            return new GetActivePunishmentProtocolObject.GetActivePunishmentResponse(false, null, null, null, 0, List.of());
         }
 
         ActivePunishment punishment = existing.get();

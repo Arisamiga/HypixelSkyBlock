@@ -23,6 +23,7 @@ public class GetActivePunishmentProtocolObject
             public String serialize(GetActivePunishmentMessage value) {
                 JSONObject json = new JSONObject();
                 json.put("target", value.target().toString());
+                json.put("type", value.type());
                 return json.toString();
             }
 
@@ -30,7 +31,8 @@ public class GetActivePunishmentProtocolObject
             public GetActivePunishmentMessage deserialize(String json) {
                 JSONObject obj = new JSONObject(json);
                 return new GetActivePunishmentMessage(
-                        UUID.fromString(obj.getString("target"))
+                        UUID.fromString(obj.getString("target")),
+                        obj.getString("type")
                 );
             }
 
@@ -87,7 +89,8 @@ public class GetActivePunishmentProtocolObject
     }
 
     public record GetActivePunishmentMessage(
-            @NotNull UUID target
+            @NotNull UUID target,
+            @NotNull String type
     ) {}
 
     public record GetActivePunishmentResponse(

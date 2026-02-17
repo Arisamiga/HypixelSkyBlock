@@ -20,6 +20,7 @@ public class UnpunishPlayerProtocolObject
                 JSONObject json = new JSONObject();
                 json.put("target", value.target().toString());
                 json.put("staff", value.staff().toString());
+                json.put("type", value.type());
                 return json.toString();
             }
 
@@ -28,7 +29,8 @@ public class UnpunishPlayerProtocolObject
                 JSONObject obj = new JSONObject(json);
                 return new UnpunishPlayerMessage(
                         UUID.fromString(obj.getString("target")),
-                        UUID.fromString(obj.getString("staff"))
+                        UUID.fromString(obj.getString("staff")),
+                        obj.getString("type")
                 );
             }
 
@@ -55,7 +57,7 @@ public class UnpunishPlayerProtocolObject
                 JSONObject obj = new JSONObject(json);
                 return new UnpunishPlayerResponse(
                         obj.getBoolean("success"),
-                        obj.optString("errorMessage", null)
+                        obj.isNull("errorMessage") ? null : obj.getString("errorMessage")
                 );
             }
 
@@ -68,7 +70,8 @@ public class UnpunishPlayerProtocolObject
 
     public record UnpunishPlayerMessage(
             @NotNull UUID target,
-            @NotNull UUID staff
+            @NotNull UUID staff,
+            @NotNull String type
     ) {}
 
     public record UnpunishPlayerResponse(

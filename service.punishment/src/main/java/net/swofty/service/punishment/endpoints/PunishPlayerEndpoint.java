@@ -1,5 +1,6 @@
 package net.swofty.service.punishment.endpoints;
 
+import com.google.gson.Gson;
 import net.swofty.commons.impl.ServiceProxyRequest;
 import net.swofty.commons.protocol.ProtocolObject;
 import net.swofty.commons.protocol.objects.punishment.PunishPlayerProtocolObject;
@@ -38,28 +39,32 @@ public class PunishPlayerEndpoint implements ServiceEndpoint
 
         boolean hasOverwriteTag = messageObject.tags() != null && messageObject.tags().contains(PunishmentTag.OVERWRITE);
         if (!hasOverwriteTag) {
-            Optional<ActivePunishment> existing = PunishmentRedis.getActive(messageObject.target());
+            Optional<ActivePunishment> existing = PunishmentRedis.getActive(messageObject.target(), messageObject.type());
             if (existing.isPresent()) {
-                ActivePunishment active = existing.get();
-                PunishmentType existingType = PunishmentType.valueOf(active.type());
-                if (existingType == punishmentType) {
-                    return new PunishPlayerProtocolObject.PunishPlayerResponse(false, null,
-                            PunishPlayerProtocolObject.ErrorCode.ALREADY_PUNISHED, active.banId());
-                }
+                return new PunishPlayerProtocolObject.PunishPlayerResponse(false, null,
+                        PunishPlayerProtocolObject.ErrorCode.ALREADY_PUNISHED, existing.get().banId());
             }
         }
 
         PunishmentReason reason = messageObject.reason();
         PunishmentId id = PunishmentId.generateId();
 
-        PunishmentRedis.saveActivePunishment(
-                messageObject.target(),
-                messageObject.type(),
-                id.id(),
-                reason,
-                messageObject.expiresAt(),
-                messageObject.tags()
-        );
+        try {
+            PunishmentRedis.saveActivePunishment(
+                    messageObject.target(),
+                    messageObject.type(),
+                    id.id(),
+                    reason,
+                    messageObject.expiresAt(),
+                    messageObject.tags()
+            );
+        } catch (Exception e) {
+            Logger.error("Failed to save punishment to Redis", e);
+            return new PunishPlayerProtocolObject.PunishPlayerResponse(false, null,
+                    PunishPlayerProtocolObject.ErrorCode.DATABASE_ERROR, "Failed to save punishment.");
+        }
+
+        Gson gson = new Gson();
         ProxyRedis.publishToProxy(ToProxyChannels.PUNISH_PLAYER, new JSONObject()
                 .put("target", messageObject.target())
                 .put("type", messageObject.type())
@@ -69,6 +74,7 @@ public class PunishPlayerEndpoint implements ServiceEndpoint
                 .put("staff", messageObject.staff())
                 .put("issuedAt", now.toEpochMilli())
                 .put("expiresAt", messageObject.expiresAt())
+                .put("tags", messageObject.tags() != null ? gson.toJson(messageObject.tags()) : null)
         );
         Logger.info("Issued {} punishment to {} for reason '{}' (expires at: {})",
                 messageObject.type(),
