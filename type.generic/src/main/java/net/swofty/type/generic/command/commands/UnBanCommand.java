@@ -2,6 +2,8 @@ package net.swofty.type.generic.command.commands;
 
 import net.minestom.server.command.builder.arguments.Argument;
 import net.minestom.server.command.builder.arguments.ArgumentType;
+import net.minestom.server.entity.Player;
+import net.minestom.server.utils.mojang.MojangUtils;
 import net.minestom.server.command.builder.suggestion.SuggestionEntry;
 import net.swofty.commons.ServiceType;
 import net.swofty.commons.protocol.objects.punishment.GetAllBannedIdsProtocolObject;
@@ -12,7 +14,7 @@ import net.swofty.type.generic.command.HypixelCommand;
 import net.swofty.type.generic.user.categories.Rank;
 
 import java.io.IOException;
-import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -47,10 +49,10 @@ public class UnBanCommand extends HypixelCommand {
 
             CompletableFuture.runAsync(() -> {
                 try {
-                    var targetUuid = resolvePlayerUuid(sender, playerName, "unban");
+                    var targetUuid = MojangUtils.getUUID(playerName);
                     ProxyService punishmentService = new ProxyService(ServiceType.PUNISHMENT);
                     var message = new UnpunishPlayerProtocolObject.UnpunishPlayerMessage(
-                            targetUuid, senderUuid(sender)
+                            targetUuid, (sender instanceof Player p ? p.getUuid() : new UUID(0, 0))
                     );
 
                     punishmentService.handleRequest(message).thenAccept(result -> {

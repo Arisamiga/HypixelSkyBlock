@@ -3,6 +3,8 @@ package net.swofty.type.generic.command.commands;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.command.CommandSender;
 import net.minestom.server.command.builder.arguments.*;
+import net.minestom.server.entity.Player;
+import net.minestom.server.utils.mojang.MojangUtils;
 import net.minestom.server.command.builder.suggestion.SuggestionEntry;
 import net.swofty.commons.ServiceType;
 import net.swofty.commons.StringUtility;
@@ -56,10 +58,10 @@ public class BanCommand extends HypixelCommand {
 
             CompletableFuture.runAsync(() -> {
                 try {
-                    UUID targetUuid = resolvePlayerUuid(sender, playerName, "ban");
+                    UUID targetUuid = MojangUtils.getUUID(playerName);
                     long actualTime = StringUtility.parseDuration(duration);
                     long expiryTime = System.currentTimeMillis() + actualTime;
-                    banPlayer(sender, targetUuid, type, senderUuid(sender), actualTime, expiryTime, playerName, null);
+                    banPlayer(sender, targetUuid, type, (sender instanceof Player p ? p.getUuid() : new UUID(0, 0)), actualTime, expiryTime, playerName, null);
                 } catch (IOException e) {
                     sender.sendMessage("§cCould not find player: " + playerName);
                 }
@@ -72,8 +74,8 @@ public class BanCommand extends HypixelCommand {
 
             CompletableFuture.runAsync(() -> {
                 try {
-                    banPlayer(sender, resolvePlayerUuid(sender, playerName, "ban"), reason,
-                            senderUuid(sender), 0, -1, playerName, null);
+                    banPlayer(sender, MojangUtils.getUUID(playerName), reason,
+                            (sender instanceof Player p ? p.getUuid() : new UUID(0, 0)), 0, -1, playerName, null);
                 } catch (IOException e) {
                     sender.sendMessage("§cCould not find player: " + playerName);
                 }
@@ -87,8 +89,8 @@ public class BanCommand extends HypixelCommand {
 
             CompletableFuture.runAsync(() -> {
                 try {
-                    banPlayer(sender, resolvePlayerUuid(sender, playerName, "ban"), reason,
-                            senderUuid(sender), 0, -1, playerName, tags);
+                    banPlayer(sender, MojangUtils.getUUID(playerName), reason,
+                            (sender instanceof Player p ? p.getUuid() : new UUID(0, 0)), 0, -1, playerName, tags);
                 } catch (IOException e) {
                     sender.sendMessage("§cCould not find player: " + playerName);
                 }

@@ -3,6 +3,8 @@ package net.swofty.type.generic.command.commands;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.command.CommandSender;
 import net.minestom.server.command.builder.arguments.Argument;
+import net.minestom.server.entity.Player;
+import net.minestom.server.utils.mojang.MojangUtils;
 import net.minestom.server.command.builder.arguments.ArgumentString;
 import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.command.builder.suggestion.SuggestionEntry;
@@ -49,10 +51,10 @@ public class MuteCommand extends HypixelCommand {
 
             CompletableFuture.runAsync(() -> {
                 try {
-                    UUID targetUuid = resolvePlayerUuid(sender, playerName, "mute");
+                    UUID targetUuid = MojangUtils.getUUID(playerName);
                     long actualTime = StringUtility.parseDuration(duration);
                     long expiryTime = System.currentTimeMillis() + actualTime;
-                    mutePlayer(sender, targetUuid, type, senderUuid(sender), actualTime, expiryTime, playerName);
+                    mutePlayer(sender, targetUuid, type, (sender instanceof Player p ? p.getUuid() : new UUID(0, 0)), actualTime, expiryTime, playerName);
                 } catch (IOException e) {
                     sender.sendMessage("§cCould not find player: " + playerName);
                 }
@@ -65,8 +67,8 @@ public class MuteCommand extends HypixelCommand {
 
             CompletableFuture.runAsync(() -> {
                 try {
-                    mutePlayer(sender, resolvePlayerUuid(sender, playerName, "mute"), reason,
-                            senderUuid(sender), 0, -1, playerName);
+                    mutePlayer(sender, MojangUtils.getUUID(playerName), reason,
+                            (sender instanceof Player p ? p.getUuid() : new UUID(0, 0)), 0, -1, playerName);
                 } catch (IOException e) {
                     sender.sendMessage("§cCould not find player: " + playerName);
                 }
