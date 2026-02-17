@@ -4,16 +4,21 @@ import lombok.Getter;
 import net.minestom.server.command.CommandSender;
 import net.minestom.server.command.ConsoleSender;
 import net.minestom.server.command.builder.Command;
+import net.minestom.server.entity.Player;
+import net.minestom.server.utils.mojang.MojangUtils;
 import net.swofty.type.generic.data.HypixelDataHandler;
 import net.swofty.type.generic.data.datapoints.DatapointRank;
 import net.swofty.type.generic.user.HypixelPlayer;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public abstract class HypixelCommand {
     public static final String COMMAND_SUFFIX = "Command";
+    public static final UUID CONSOLE_UUID = new UUID(0, 0);
 
     @Getter
     private final CommandParameters params;
@@ -39,6 +44,16 @@ public abstract class HypixelCommand {
     }
 
     public abstract void registerUsage(MinestomCommand command);
+
+    protected static UUID resolvePlayerUuid(CommandSender sender, String playerName, String action) throws IOException {
+        UUID uuid = MojangUtils.getUUID(playerName);
+        sender.sendMessage("§8Processing " + action + " for player §e" + playerName + "§7... (" + uuid + ")");
+        return uuid;
+    }
+
+    protected static UUID senderUuid(CommandSender sender) {
+        return sender instanceof Player p ? p.getUuid() : CONSOLE_UUID;
+    }
 
     public boolean permissionCheck(CommandSender sender) {
         HypixelPlayer player = (HypixelPlayer) sender;

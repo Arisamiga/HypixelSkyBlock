@@ -6,8 +6,6 @@ import net.minestom.server.command.builder.arguments.Argument;
 import net.minestom.server.command.builder.arguments.ArgumentString;
 import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.command.builder.suggestion.SuggestionEntry;
-import net.minestom.server.entity.Player;
-import net.minestom.server.utils.mojang.MojangUtils;
 import net.swofty.commons.ServiceType;
 import net.swofty.commons.StringUtility;
 import net.swofty.commons.protocol.objects.punishment.PunishPlayerProtocolObject;
@@ -49,55 +47,35 @@ public class MuteCommand extends HypixelCommand {
             String duration = context.get(durationArg);
             MuteType type = MuteType.valueOf(context.get(reasonArg));
 
-
-            UUID targetUuid;
-            try {
-                targetUuid = MojangUtils.getUUID(playerName);
-                sender.sendMessage("§8Processing mute for player §e" + playerName + "§7... (" + targetUuid + ")");
-            } catch (IOException e) {
-                sender.sendMessage("§cCould not find player: " + playerName);
-                return;
-            }
-
-            UUID senderUuid;
-            if (sender instanceof Player player) {
-                senderUuid = player.getUuid();
-            } else {
-                senderUuid = UUID.fromString("00000000-0000-0000-0000-000000000000");
-            }
-
-            long actualTime = StringUtility.parseDuration(duration);
-            long expiryTime = System.currentTimeMillis() + actualTime;
-
             CompletableFuture.runAsync(() -> {
-                mutePlayer(sender, targetUuid, type, senderUuid, actualTime, expiryTime, playerName);
+                try {
+                    UUID targetUuid = resolvePlayerUuid(sender, playerName, "mute");
+                    long actualTime = StringUtility.parseDuration(duration);
+                    long expiryTime = System.currentTimeMillis() + actualTime;
+                    mutePlayer(sender, targetUuid, type, senderUuid(sender), actualTime, expiryTime, playerName);
+                } catch (IOException e) {
+                    sender.sendMessage("§cCould not find player: " + playerName);
+                }
             });
         }, playerArg, durationArg, reasonArg);
 
-        // permanent mute
         command.addSyntax((sender, context) -> {
             String playerName = context.get(playerArg);
             MuteType reason = MuteType.valueOf(context.get(reasonArg));
 
             CompletableFuture.runAsync(() -> {
                 try {
-                    mutePlayer(sender,
-                            MojangUtils.getUUID(playerName),
-                            reason,
-                            sender instanceof Player player ? player.getUuid() : UUID.fromString("00000000-0000-0000-0000-000000000000"),
-                            0,
-                            -1,
-                            playerName);
+                    mutePlayer(sender, resolvePlayerUuid(sender, playerName, "mute"), reason,
+                            senderUuid(sender), 0, -1, playerName);
                 } catch (IOException e) {
                     sender.sendMessage("§cCould not find player: " + playerName);
                 }
             });
-
-
         }, playerArg, reasonArg);
     }
 
-    private void mutePlayer(CommandSender sender, UUID targetUuid, MuteType type, UUID senderUuid, long actualTime, long expiryTime, String playerName) {
+    private void mutePlayer(CommandSender sender, UUID targetUuid, MuteType type, UUID senderUuid,
+                            long actualTime, long expiryTime, String playerName) {
         ProxyService punishmentService = new ProxyService(ServiceType.PUNISHMENT);
         PunishmentReason reason = new PunishmentReason(type);
         PunishPlayerProtocolObject.PunishPlayerMessage message = new PunishPlayerProtocolObject.PunishPlayerMessage(
@@ -113,6 +91,8 @@ public class MuteCommand extends HypixelCommand {
             if (result instanceof PunishPlayerProtocolObject.PunishPlayerResponse response) {
                 if (response.success()) {
                     sender.sendMessage("§aSuccessfully muted player §e" + playerName + "§a. §8Punishment ID: §7" + response.punishmentId());
+                } else if (response.errorCode() == PunishPlayerProtocolObject.ErrorCode.ALREADY_PUNISHED) {
+                    sender.sendMessage("§cThis player already has an active punishment. Punishment ID: §7" + response.errorMessage());
                 } else {
                     sender.sendMessage("§cFailed to mute player: " + response.errorMessage());
                 }
