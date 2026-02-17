@@ -21,7 +21,6 @@ import net.minestom.server.utils.time.TimeUnit;
 import net.swofty.commons.CustomWorlds;
 import net.swofty.commons.ServerType;
 import net.swofty.commons.config.ConfigProvider;
-import net.swofty.commons.punishment.PunishmentRedis;
 import net.swofty.type.generic.block.PlayerHeadBlockHandler;
 import net.swofty.type.generic.block.SignBlockHandler;
 import net.swofty.type.generic.command.HypixelCommand;
@@ -194,9 +193,6 @@ public record HypixelGenericLoader(HypixelTypeLoader loader) {
 
         // Initialize leaderboard service (uses Redis for O(log N) leaderboard operations)
         LeaderboardService.connect(ConfigProvider.settings().getRedisUri());
-
-        // Initialize punishment Redis connection
-        PunishmentRedis.connect(ConfigProvider.settings().getRedisUri());
 
         // Load achievement and quest registries from YAML configuration
         AchievementRegistry.loadFromConfiguration();

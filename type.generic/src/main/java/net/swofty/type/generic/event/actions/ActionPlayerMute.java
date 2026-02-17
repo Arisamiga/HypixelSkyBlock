@@ -2,29 +2,36 @@ package net.swofty.type.generic.event.actions;
 
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerChatEvent;
+import net.swofty.commons.ServiceType;
+import net.swofty.commons.protocol.objects.punishment.GetActivePunishmentProtocolObject;
 import net.swofty.commons.punishment.PunishmentMessages;
 import net.swofty.commons.punishment.PunishmentRedis;
 import net.swofty.commons.punishment.PunishmentType;
+import net.swofty.proxyapi.ProxyService;
 import net.swofty.type.generic.event.EventNodes;
 import net.swofty.type.generic.event.HypixelEvent;
 import net.swofty.type.generic.event.HypixelEventClass;
 
-import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public class ActionPlayerMute implements HypixelEventClass {
 
     @HypixelEvent(node = EventNodes.PLAYER, requireDataLoaded = false)
     public void onPlayerChat(PlayerChatEvent event) {
         Player player = event.getPlayer();
-        Optional<PunishmentRedis.ActivePunishment> activePunishment = PunishmentRedis.getActive(player.getUuid());
-        activePunishment.ifPresent(punishment -> {
-            PunishmentType type = PunishmentType.valueOf(punishment.type());
-            if (type != PunishmentType.MUTE) {
-                return;
-            }
-            event.setCancelled(true);
-            player.sendMessage(PunishmentMessages.muteMessage(punishment));
-        });
-    }
+        try {
+            var response = new ProxyService(ServiceType.PUNISHMENT)
+                    .handleRequest(new GetActivePunishmentProtocolObject.GetActivePunishmentMessage(player.getUuid()))
+                    .orTimeout(2, TimeUnit.SECONDS)
+                    .join();
 
+            if (response instanceof GetActivePunishmentProtocolObject.GetActivePunishmentResponse r
+                    && r.found() && PunishmentType.valueOf(r.type()) == PunishmentType.MUTE) {
+                event.setCancelled(true);
+                var punishment = new PunishmentRedis.ActivePunishment(r.type(), r.banId(), r.reason(), r.expiresAt());
+                player.sendMessage(PunishmentMessages.muteMessage(punishment));
+            }
+        } catch (Exception ignored) {
+        }
+    }
 }

@@ -32,13 +32,18 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelPipeline;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
+import net.swofty.commons.ServiceType;
 import net.swofty.commons.ServerType;
 import net.swofty.commons.config.ConfigProvider;
 import net.swofty.commons.config.Settings;
+import net.swofty.commons.protocol.ProtocolObject;
+import net.swofty.commons.protocol.objects.punishment.GetActivePunishmentProtocolObject;
 import net.swofty.commons.proxy.FromProxyChannels;
 import net.swofty.commons.punishment.PunishmentMessages;
 import net.swofty.commons.punishment.PunishmentRedis;
 import net.swofty.commons.punishment.PunishmentType;
+import net.swofty.proxyapi.ProxyService;
+import net.swofty.proxyapi.redis.ServerOutboundMessage;
 import net.swofty.redisapi.api.RedisAPI;
 import net.swofty.velocity.command.ProtocolVersionCommand;
 import net.swofty.velocity.command.ServerStatusCommand;
@@ -66,7 +71,6 @@ import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -204,30 +208,42 @@ public class SkyBlockVelocity {
 		for (FromProxyChannels channel : FromProxyChannels.values()) {
 			RedisMessage.registerProxyToServer(channel);
 		}
+		loopThroughPackage("net.swofty.commons.protocol.objects", ProtocolObject.class)
+				.forEach(ServerOutboundMessage::registerFromProtocolObject);
 		RedisAPI.getInstance().startListeners();
 
 		/**
 		 * Setup GameManager
 		 */
 		GameManager.loopServers(server);
-        PunishmentRedis.connect(ConfigProvider.settings().getRedisUri());
 	}
 
 	public boolean punished(Player player) {
-		Optional<PunishmentRedis.ActivePunishment> activePunishment = PunishmentRedis.getActive(player.getUniqueId());
-		if (activePunishment.isEmpty()) return false;
+		try {
+			var response = new ProxyService(ServiceType.PUNISHMENT)
+					.handleRequest(new GetActivePunishmentProtocolObject.GetActivePunishmentMessage(player.getUniqueId()))
+					.orTimeout(3, TimeUnit.SECONDS)
+					.join();
 
-		PunishmentRedis.ActivePunishment punishment = activePunishment.get();
-		PunishmentType type = PunishmentType.valueOf(punishment.type());
-		if (type == PunishmentType.BAN) {
-			player.disconnect(PunishmentMessages.banMessage(punishment));
-			return true;
+			if (!(response instanceof GetActivePunishmentProtocolObject.GetActivePunishmentResponse r) || !r.found()) {
+				return false;
+			}
+
+			PunishmentRedis.ActivePunishment punishment = new PunishmentRedis.ActivePunishment(
+					r.type(), r.banId(), r.reason(), r.expiresAt());
+			PunishmentType type = PunishmentType.valueOf(r.type());
+			if (type == PunishmentType.BAN) {
+				player.disconnect(PunishmentMessages.banMessage(punishment));
+				return true;
+			}
+			if (type == PunishmentType.MUTE) {
+				player.sendMessage(PunishmentMessages.muteMessage(punishment));
+			}
+			return false;
+		} catch (Exception e) {
+			return false;
 		}
-		if (type == PunishmentType.MUTE) {
-			player.sendMessage(PunishmentMessages.muteMessage(punishment));
-		}
-		return false;
-    }
+	}
 
 	@Subscribe
 	public void onPlayerJoin(PlayerChooseInitialServerEvent event) {
