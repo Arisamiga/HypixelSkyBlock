@@ -57,12 +57,8 @@ public class MuteCommand extends HypixelCommand {
 
             CompletableFuture.runAsync(() -> {
                 try {
-                    long actualTime = StringUtility.parseDuration(duration);
-                    if (actualTime <= 0) {
-                        player.sendMessage("§cInvalid duration format. Use e.g. 30d, 12h, 30m, 10s.");
-                        return;
-                    }
                     UUID targetUuid = net.minestom.server.utils.mojang.MojangUtils.getUUID(playerName);
+                    long actualTime = StringUtility.parseDuration(duration);
                     long expiryTime = System.currentTimeMillis() + actualTime;
                     mutePlayer(player, targetUuid, type, player.getUuid(), actualTime, expiryTime, playerName);
                 } catch (IOException e) {

@@ -48,8 +48,9 @@ public final class PunishmentMessages {
             time = "§7Your mute will expire in §c" + prettyTimeLeft + "\n\n";
         }
 
+        String reasonLine = "§7Reason: §f" + reason.getReasonString() + "\n";
         String urlInfo = "§7Find out more here: §fwww.hypixel.net/mutes\n";
         String footer = "§7Mute ID: §f" + punishment.banId();
-        return Component.text(line + header + time + urlInfo + footer + line);
+        return Component.text(line + header + reasonLine + time + urlInfo + footer + line);
     }
 }
