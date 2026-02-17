@@ -36,6 +36,7 @@ import net.swofty.commons.ServerType;
 import net.swofty.commons.config.ConfigProvider;
 import net.swofty.commons.config.Settings;
 import net.swofty.commons.proxy.FromProxyChannels;
+import net.swofty.commons.punishment.PunishmentMessages;
 import net.swofty.commons.punishment.PunishmentRedis;
 import net.swofty.commons.punishment.PunishmentType;
 import net.swofty.redisapi.api.RedisAPI;
@@ -69,7 +70,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -213,20 +214,19 @@ public class SkyBlockVelocity {
 	}
 
 	public boolean punished(Player player) {
-		AtomicBoolean shouldConnect = new AtomicBoolean(true);
 		Optional<PunishmentRedis.ActivePunishment> activePunishment = PunishmentRedis.getActive(player.getUniqueId());
-		activePunishment.ifPresent(punishment -> {
-			PunishmentType type = PunishmentType.valueOf(punishment.type());
-			if (type == PunishmentType.BAN) {
-				player.disconnect(PunishmentRedis.parseActivePunishmentBanMessage(punishment));
-				shouldConnect.set(false);
-			}
-			if (type == PunishmentType.MUTE) {
-				player.sendMessage(PunishmentRedis.parseActivePunishmentMuteMessage(punishment));
-			}
-		});
+		if (activePunishment.isEmpty()) return false;
 
-        return !shouldConnect.get();
+		PunishmentRedis.ActivePunishment punishment = activePunishment.get();
+		PunishmentType type = PunishmentType.valueOf(punishment.type());
+		if (type == PunishmentType.BAN) {
+			player.disconnect(PunishmentMessages.banMessage(punishment));
+			return true;
+		}
+		if (type == PunishmentType.MUTE) {
+			player.sendMessage(PunishmentMessages.muteMessage(punishment));
+		}
+		return false;
     }
 
 	@Subscribe

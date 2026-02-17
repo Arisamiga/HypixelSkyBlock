@@ -2,6 +2,7 @@ package net.swofty.type.generic.event.actions;
 
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerChatEvent;
+import net.swofty.commons.punishment.PunishmentMessages;
 import net.swofty.commons.punishment.PunishmentRedis;
 import net.swofty.commons.punishment.PunishmentType;
 import net.swofty.type.generic.event.EventNodes;
@@ -22,7 +23,7 @@ public class ActionPlayerMute implements HypixelEventClass {
                 return;
             }
             event.setCancelled(true);
-            player.sendMessage(PunishmentRedis.parseActivePunishmentMuteMessage(punishment));
+            player.sendMessage(PunishmentMessages.muteMessage(punishment));
         });
     }
 

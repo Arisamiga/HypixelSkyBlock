@@ -6,6 +6,7 @@ import net.kyori.adventure.text.Component;
 import net.swofty.commons.proxy.ToProxyChannels;
 import net.swofty.commons.punishment.PunishmentId;
 import net.swofty.commons.punishment.PunishmentReason;
+import net.swofty.commons.punishment.PunishmentMessages;
 import net.swofty.commons.punishment.PunishmentRedis;
 import net.swofty.commons.punishment.PunishmentType;
 import net.swofty.commons.punishment.template.BanType;
@@ -56,10 +57,10 @@ public class ListenerPlayerPunished extends RedisListener {
             PunishmentRedis.ActivePunishment activePunishment = new PunishmentRedis.ActivePunishment(type, id, finalReason, expiresAt);
             switch (punishmentType) {
                 case BAN -> {
-                    player.disconnect(PunishmentRedis.parseActivePunishmentBanMessage(activePunishment));
+                    player.disconnect(PunishmentMessages.banMessage(activePunishment));
                 }
                 case MUTE -> {
-                    player.sendMessage(PunishmentRedis.parseActivePunishmentMuteMessage(activePunishment));
+                    player.sendMessage(PunishmentMessages.muteMessage(activePunishment));
                 }
                 case WARNING -> {
                     player.sendMessage(Component.text("§c[WARNING] §7You have received a warning for the following reason: §e" + finalReason));
