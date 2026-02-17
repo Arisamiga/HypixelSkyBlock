@@ -68,7 +68,7 @@ public class PunishmentRedis {
         if (!isInitialized()) throw new IllegalStateException("PunishmentRedis not initialized");
 
         try (Jedis jedis = jedisPool.getResource()) {
-            String k = key(playerId, type);
+            String redisKey = key(playerId, type);
 
             HashMap<String, String> data = new HashMap<>(Map.of(
                     "type", type,
@@ -80,14 +80,14 @@ public class PunishmentRedis {
                 data.put("tags", GSON.toJson(tags));
             }
 
-            jedis.hset(k, data);
+            jedis.hset(redisKey, data);
             if (expiresAt > 0) {
                 long ttlSeconds = (expiresAt - System.currentTimeMillis()) / 1000;
                 if (ttlSeconds > 0) {
-                    jedis.expire(k, (int) ttlSeconds);
+                    jedis.expire(redisKey, (int) ttlSeconds);
                 }
             } else {
-                jedis.persist(k);
+                jedis.persist(redisKey);
             }
         }
     }
@@ -96,8 +96,8 @@ public class PunishmentRedis {
         if (!isInitialized()) return Optional.empty();
 
         try (Jedis jedis = jedisPool.getResource()) {
-            String k = key(playerId, type);
-            Map<String, String> data = jedis.hgetAll(k);
+            String redisKey = key(playerId, type);
+            Map<String, String> data = jedis.hgetAll(redisKey);
 
             if (data.isEmpty()) return Optional.empty();
 
@@ -105,7 +105,7 @@ public class PunishmentRedis {
             long expiresAt = Long.parseLong(data.getOrDefault("expiresAt", "-1"));
 
             if (expiresAt > 0 && System.currentTimeMillis() > expiresAt) {
-                jedis.del(k);
+                jedis.del(redisKey);
                 return Optional.empty();
             }
 
@@ -125,8 +125,8 @@ public class PunishmentRedis {
         if (!isInitialized()) return List.of();
 
         List<ActivePunishment> result = new ArrayList<>();
-        for (PunishmentType pt : PunishmentType.values()) {
-            getActive(playerId, pt.name()).ifPresent(result::add);
+        for (PunishmentType punishmentType : PunishmentType.values()) {
+            getActive(playerId, punishmentType.name()).ifPresent(result::add);
         }
         return result;
     }

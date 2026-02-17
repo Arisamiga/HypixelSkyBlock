@@ -222,23 +222,25 @@ public class SkyBlockVelocity {
 		try {
 			ProxyService service = new ProxyService(ServiceType.PUNISHMENT);
 
-			var banFuture = service.handleRequest(
+			CompletableFuture<?> banFuture = service.handleRequest(
 					new GetActivePunishmentProtocolObject.GetActivePunishmentMessage(player.getUniqueId(), PunishmentType.BAN.name()));
-			var muteFuture = service.handleRequest(
+			CompletableFuture<?> muteFuture = service.handleRequest(
 					new GetActivePunishmentProtocolObject.GetActivePunishmentMessage(player.getUniqueId(), PunishmentType.MUTE.name()));
 
 			CompletableFuture.allOf(banFuture, muteFuture).orTimeout(3, TimeUnit.SECONDS).join();
 
-			var banResponse = banFuture.join();
-			if (banResponse instanceof GetActivePunishmentProtocolObject.GetActivePunishmentResponse r && r.found()) {
-				ActivePunishment punishment = new ActivePunishment(r.type(), r.banId(), r.reason(), r.expiresAt(), r.tags());
+			Object banResult = banFuture.join();
+			if (banResult instanceof GetActivePunishmentProtocolObject.GetActivePunishmentResponse banResponse && banResponse.found()) {
+				ActivePunishment punishment = new ActivePunishment(
+						banResponse.type(), banResponse.banId(), banResponse.reason(), banResponse.expiresAt(), banResponse.tags());
 				player.disconnect(PunishmentMessages.banMessage(punishment));
 				return true;
 			}
 
-			var muteResponse = muteFuture.join();
-			if (muteResponse instanceof GetActivePunishmentProtocolObject.GetActivePunishmentResponse r && r.found()) {
-				ActivePunishment punishment = new ActivePunishment(r.type(), r.banId(), r.reason(), r.expiresAt(), r.tags());
+			Object muteResult = muteFuture.join();
+			if (muteResult instanceof GetActivePunishmentProtocolObject.GetActivePunishmentResponse muteResponse && muteResponse.found()) {
+				ActivePunishment punishment = new ActivePunishment(
+						muteResponse.type(), muteResponse.banId(), muteResponse.reason(), muteResponse.expiresAt(), muteResponse.tags());
 				player.sendMessage(PunishmentMessages.muteMessage(punishment));
 			}
 			return false;
