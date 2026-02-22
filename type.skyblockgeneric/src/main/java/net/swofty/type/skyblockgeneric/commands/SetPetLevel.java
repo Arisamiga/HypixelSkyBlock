@@ -1,8 +1,8 @@
 package net.swofty.type.skyblockgeneric.commands;
 
 import net.minestom.server.command.builder.arguments.number.ArgumentInteger;
-import net.swofty.commons.item.Rarity;
-import net.swofty.commons.item.attribute.attributes.ItemAttributePetData;
+import net.swofty.commons.skyblock.item.Rarity;
+import net.swofty.commons.skyblock.item.attribute.attributes.ItemAttributePetData;
 import net.swofty.type.generic.command.CommandParameters;
 import net.swofty.type.generic.command.HypixelCommand;
 import net.swofty.type.skyblockgeneric.item.updater.PlayerItemOrigin;
@@ -12,7 +12,7 @@ import net.swofty.type.generic.user.categories.Rank;
 @CommandParameters(aliases = "updatepetlevel",
         description = "Sets the level of the pet",
         usage = "/setpetlevel <level>",
-        permission = Rank.ADMIN,
+        permission = Rank.STAFF,
         allowsConsole = false)
 public class SetPetLevel extends HypixelCommand {
     @Override

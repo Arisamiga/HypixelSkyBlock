@@ -62,8 +62,11 @@ public class DatapointToggles extends Datapoint<DatapointToggles.Toggles> {
             toggles.put(type, value);
         }
 
-        public void inverse(ToggleType type) {
-            toggles.put(type, !toggles.getOrDefault(type, type.defaultValue));
+        public boolean inverse(ToggleType type) {
+            // toggles.put(type, !toggles.getOrDefault(type, type.defaultValue));
+			boolean newValue = !toggles.getOrDefault(type, type.defaultValue);
+			toggles.put(type, newValue);
+			return newValue;
         }
 
         public enum ToggleType {
@@ -72,21 +75,46 @@ public class DatapointToggles extends Datapoint<DatapointToggles.Toggles> {
             DISABLE_DROP_MESSAGES(false),
             HAS_SPOKEN_TO_BEA(false),
             HAS_SPOKEN_TO_TIA(false),
+            HAS_SPOKEN_TO_LIFT_OPERATOR(false),
+            HAS_SPOKEN_TO_LAZY_MINER(false),
+            HAS_SPOKEN_TO_RUSTY(false),
+            HAS_SPOKEN_TO_RUSTY_ABOUT_PICKAXE(false),
+            HAS_SPOKEN_TO_RUSTY_ABOUT_ABIPHONE(false),
+            HAS_GIVEN_WALTER_CUBE(false),
+            HAS_GIVEN_BUILDER_BUILDERS_WAND(false),
             HAS_SPOKEN_TO_CURATOR(false),
             HAS_SPOKEN_TO_MADAME_ELEANOR(false),
             HAS_DONE_COAL_TRADE_WITH_BLACKSMITH(false),
             HAS_SPOKEN_TO_SEYMOUR(false),
             HAS_SPOKEN_TO_FISH_MERCHANT(false),
+            HAS_SPOKEN_TO_GOLD_FORGER(false),
+            HAS_SPOKEN_TO_IRON_FORGER(false),
+            HAS_SPOKEN_TO_GOLD_BLACKSMITH(false),
             HAS_SPOKEN_TO_FARM_MERCHANT(false),
             HAS_SPOKEN_TO_ADVENTURER(false),
+            HAS_SAID_MOLBERT_IS_MOLE(false),
             HAS_SPOKEN_TO_LUMBER_MERCHANT(false),
             HAS_SPOKEN_TO_MINE_MERCHANT(false),
+            HAS_SPOKEN_TO_MASTER_TACTICIAN_FUNK(false),
             HAS_SPOKEN_TO_WEAPONSMITH(false),
             HAS_SPOKEN_TO_BUILDER(false),
             HAS_SPOKEN_TO_WOOL_WEAVER(false),
             HAS_SPOKEN_TO_MAD_REDSTONE_ENGINEER(false),
             HAS_SPOKEN_TO_ZOG(false),
+            HAS_SPOKEN_TO_JAX(false),
+            HAS_REALLY_SPOKEN_TO_JAX(false),
+            HAS_SPOKEN_TO_ALCHEMIST(false),
+            HAS_SPOKEN_TO_BRAMASS_BEASTSLAYER(false),
+            HAS_SPOKEN_TO_RICK(false),
+            HAS_SPOKEN_TO_MICHAEL(false),
+            HAS_SPOKEN_TO_IKE(false),
+            HAS_SPOKEN_TO_EMISSARY_BRAUM(false),
+            HAS_SPOKEN_TO_GEO(false),
             PAPER_ICONS(false),
+			LOBBY_SHOW_PLAYERS(true),
+			AUTO_ACCEPT_QUESTS(false),
+            RUSTY_PURCHASE_CONFIRMATION(false),
+            RUSTY_SORT_BY_RARITY(false),
             ;
 
             private final boolean defaultValue;

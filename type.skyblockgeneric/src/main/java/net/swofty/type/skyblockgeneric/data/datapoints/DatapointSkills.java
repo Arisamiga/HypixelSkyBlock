@@ -6,7 +6,7 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.swofty.commons.StringUtility;
 import net.swofty.commons.protocol.Serializer;
-import net.swofty.commons.statistics.ItemStatistics;
+import net.swofty.commons.skyblock.statistics.ItemStatistics;
 import net.swofty.type.generic.event.HypixelEventHandler;
 import net.swofty.type.skyblockgeneric.data.SkyBlockDatapoint;
 import net.swofty.type.skyblockgeneric.event.custom.SkillUpdateEvent;
@@ -56,8 +56,9 @@ public class DatapointSkills extends SkyBlockDatapoint<DatapointSkills.PlayerSki
 
             try {
                 skillStatistics = ItemStatistics.fromString(jsonObject.getString("statistics"));
-            } catch (Exception ignored) {
+            } catch (Exception e) {
                 skillStatistics = ItemStatistics.empty();
+                e.printStackTrace();
             }
 
             return new PlayerSkills(skills, skillStatistics);

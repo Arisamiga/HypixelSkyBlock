@@ -1,17 +1,19 @@
 package net.swofty.type.hub.npcs;
 
 import net.minestom.server.coordinate.Pos;
-import net.swofty.type.hub.gui.GUIShopWoolWeaverVibrant;
 import net.swofty.type.generic.data.datapoints.DatapointToggles;
-import net.swofty.type.generic.entity.npc.NPCDialogue;
+import net.swofty.type.generic.entity.npc.HypixelNPC;
+import net.swofty.type.generic.entity.npc.configuration.HumanConfiguration;
 import net.swofty.type.generic.user.HypixelPlayer;
-import net.swofty.type.generic.entity.npc.NPCParameters;
+import net.swofty.type.hub.gui.GUIShopWoolWeaverVibrant;
 import net.swofty.type.skyblockgeneric.user.SkyBlockPlayer;
 
-public class NPCWoolWeaver extends NPCDialogue {
+import net.swofty.type.generic.event.custom.NPCInteractEvent;
+
+public class NPCWoolWeaver extends HypixelNPC {
 
     public NPCWoolWeaver() {
-        super(new NPCParameters() {
+        super(new HumanConfiguration() {
             @Override
             public String[] holograms(HypixelPlayer player) {
                 return new String[]{"Wool Weaver", "§e§lCLICK"};
@@ -33,14 +35,14 @@ public class NPCWoolWeaver extends NPCDialogue {
             }
 
             @Override
-            public boolean looking() {
+            public boolean looking(HypixelPlayer player) {
                 return true;
             }
         });
     }
 
     @Override
-    public void onClick(PlayerClickNPCEvent e) {
+    public void onClick(NPCInteractEvent e) {
         SkyBlockPlayer player = (SkyBlockPlayer) e.player();
         if (isInDialogue(player)) return;
         boolean hasSpokenBefore = player.getToggles().get(DatapointToggles.Toggles.ToggleType.HAS_SPOKEN_TO_WOOL_WEAVER);
@@ -52,13 +54,13 @@ public class NPCWoolWeaver extends NPCDialogue {
             return;
         }
 
-        new GUIShopWoolWeaverVibrant().open(player);
+        player.openView(new GUIShopWoolWeaverVibrant());
     }
 
     @Override
-    public NPCDialogue.DialogueSet[] getDialogueSets(HypixelPlayer player) {
-        return new NPCDialogue.DialogueSet[] {
-                NPCDialogue.DialogueSet.builder()
+    public DialogueSet[] dialogues(HypixelPlayer player) {
+        return new DialogueSet[] {
+                DialogueSet.builder()
                         .key("hello").lines(new String[]{
                                 "If wool shrinks when you wash it...",
                                 "...why don't sheep get smaller when it rains?"

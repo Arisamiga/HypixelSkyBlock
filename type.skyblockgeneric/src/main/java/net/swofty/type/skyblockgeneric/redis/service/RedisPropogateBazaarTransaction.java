@@ -1,8 +1,8 @@
 package net.swofty.type.skyblockgeneric.redis.service;
 
-import net.swofty.commons.bazaar.BazaarTransaction;
-import net.swofty.commons.bazaar.OrderExpiredBazaarTransaction;
-import net.swofty.commons.bazaar.SuccessfulBazaarTransaction;
+import net.swofty.commons.skyblock.bazaar.BazaarTransaction;
+import net.swofty.commons.skyblock.bazaar.OrderExpiredBazaarTransaction;
+import net.swofty.commons.skyblock.bazaar.SuccessfulBazaarTransaction;
 import net.swofty.commons.service.FromServiceChannels;
 import net.swofty.proxyapi.redis.ServiceToClient;
 import net.swofty.type.skyblockgeneric.SkyBlockGenericLoader;
@@ -47,8 +47,7 @@ public class RedisPropogateBazaarTransaction implements ServiceToClient {
             };
 
         } catch (Exception e) {
-            Logger.error("Failed to propagate bazaar transaction: " + e.getMessage());
-            e.printStackTrace();
+            Logger.error(e, "Failed to propagate bazaar transaction");
             return createFailureResponse("Exception occurred: " + e.getMessage());
         }
     }

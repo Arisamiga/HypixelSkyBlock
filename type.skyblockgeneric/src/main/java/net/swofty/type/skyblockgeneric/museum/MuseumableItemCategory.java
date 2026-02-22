@@ -3,7 +3,7 @@ package net.swofty.type.skyblockgeneric.museum;
 import lombok.Getter;
 import net.minestom.server.item.Material;
 import net.swofty.commons.StringUtility;
-import net.swofty.commons.item.ItemType;
+import net.swofty.commons.skyblock.item.ItemType;
 import net.swofty.type.skyblockgeneric.item.SkyBlockItem;
 
 import java.util.ArrayList;
@@ -15,7 +15,8 @@ import java.util.Map;
 public enum MuseumableItemCategory {
     WEAPONS("Weapons", Material.DIAMOND_SWORD, "§6"),
     ARMOR_SETS("Armor Sets", Material.CHAINMAIL_CHESTPLATE, "§9"),
-    RARITIES("Rarities", Material.EMERALD_BLOCK, "§5")
+    RARITIES("Rarities", Material.EMERALD_BLOCK, "§5"),
+    SPECIAL("Special", Material.CAKE, "§d")
     ;
 
     private final static Map<MuseumableItemCategory, List<ItemType>> ITEMS = new HashMap<>();

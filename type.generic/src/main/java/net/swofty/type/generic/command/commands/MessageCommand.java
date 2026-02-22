@@ -4,16 +4,19 @@ import net.minestom.server.command.builder.arguments.ArgumentString;
 import net.minestom.server.command.builder.arguments.ArgumentStringArray;
 import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.swofty.proxyapi.ProxyPlayer;
+import net.swofty.type.generic.HypixelGenericLoader;
 import net.swofty.type.generic.command.CommandParameters;
 import net.swofty.type.generic.command.HypixelCommand;
 import net.swofty.type.generic.data.DataHandler;
+import net.swofty.type.generic.data.HypixelDataHandler;
+import net.swofty.type.generic.data.HypixelDataHandler;
 import net.swofty.type.generic.user.HypixelPlayer;
 import net.swofty.type.generic.user.categories.Rank;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-@CommandParameters(aliases = "msg",
+@CommandParameters(aliases = "msg message whipser",
         description = "Sends a message to another player",
         usage = "/msg <player> <message>",
         permission = Rank.DEFAULT,
@@ -31,7 +34,7 @@ public class MessageCommand extends HypixelCommand {
             String[] message = context.get(messageArgument);
             HypixelPlayer player = (HypixelPlayer) sender;
 
-            @Nullable UUID targetUUID = DataHandler.getPotentialUUIDFromName(playerName);
+            @Nullable UUID targetUUID = HypixelDataHandler.getPotentialUUIDFromName(playerName);
             if (targetUUID == null) {
                 player.sendMessage("§cCan't find a player by the name of '" + playerName + "'");
                 return;

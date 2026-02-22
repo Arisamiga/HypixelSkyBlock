@@ -5,13 +5,13 @@ import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.ai.GoalSelector;
 import net.minestom.server.entity.ai.TargetSelector;
 import net.minestom.server.entity.ai.target.LastEntityDamagerTarget;
-import net.minestom.server.item.Material;
 import net.minestom.server.utils.time.TimeUnit;
-import net.swofty.commons.item.ItemType;
-import net.swofty.commons.statistics.ItemStatistic;
-import net.swofty.commons.statistics.ItemStatistics;
+import net.swofty.commons.skyblock.item.ItemType;
+import net.swofty.commons.skyblock.statistics.ItemStatistic;
+import net.swofty.commons.skyblock.statistics.ItemStatistics;
 import net.swofty.type.generic.gui.inventory.item.GUIMaterial;
 import net.swofty.type.skyblockgeneric.entity.mob.BestiaryMob;
+import net.swofty.type.skyblockgeneric.entity.mob.MobType;
 import net.swofty.type.skyblockgeneric.entity.mob.ai.ClosestEntityRegionTarget;
 import net.swofty.type.skyblockgeneric.entity.mob.ai.MeleeAttackWithinRegionGoal;
 import net.swofty.type.skyblockgeneric.entity.mob.ai.RandomRegionStrollGoal;
@@ -114,6 +114,11 @@ public class MobRuinsOldWolf extends BestiaryMob implements RegionPopulator {
     }
 
     @Override
+    public List<MobType> getMobTypes() {
+        return List.of(MobType.ANIMAL);
+    }
+
+    @Override
     public int getMaxBestiaryTier() {
         return 15;
     }
@@ -125,7 +130,7 @@ public class MobRuinsOldWolf extends BestiaryMob implements RegionPopulator {
 
     @Override
     public String getMobID() {
-        return "50_ruins_old_wolf";
+        return "OLD_WOLF";
     }
 
     @Override

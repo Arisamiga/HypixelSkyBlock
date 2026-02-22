@@ -2,14 +2,16 @@ package net.swofty.type.hub.npcs;
 
 import net.minestom.server.coordinate.Pos;
 import net.swofty.type.generic.user.HypixelPlayer;
-import net.swofty.type.hub.gui.GUIBiblio;
-import net.swofty.type.generic.entity.npc.NPCParameters;
 import net.swofty.type.generic.entity.npc.HypixelNPC;
+import net.swofty.type.generic.entity.npc.configuration.HumanConfiguration;
+import net.swofty.type.hub.gui.GUIBiblio;
+
+import net.swofty.type.generic.event.custom.NPCInteractEvent;
 
 public class NPCBiblio extends HypixelNPC {
 
     public NPCBiblio() {
-        super(new NPCParameters() {
+        super(new HumanConfiguration() {
             @Override
             public String[] holograms(HypixelPlayer player) {
                 return new String[]{"Biblio", "§e§lCLICK"};
@@ -27,18 +29,18 @@ public class NPCBiblio extends HypixelNPC {
 
             @Override
             public Pos position(HypixelPlayer player) {
-                return new Pos(7.6, 71, -99.8, 90, 0);
+                return new Pos(14, 72, -106, 50, 0);
             }
 
             @Override
-            public boolean looking() {
+            public boolean looking(HypixelPlayer player) {
                 return true;
             }
         });
     }
 
     @Override
-    public void onClick(PlayerClickNPCEvent e) {
+    public void onClick(NPCInteractEvent e) {
         new GUIBiblio().open(e.player());
     }
 

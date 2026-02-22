@@ -1,6 +1,6 @@
 package net.swofty.type.skyblockgeneric.server.attribute;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import org.tinylog.Logger;
 import lombok.Getter;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.timer.ExecutionType;
@@ -11,6 +11,7 @@ import net.swofty.type.generic.data.mongodb.AttributeDatabase;
 import net.swofty.type.skyblockgeneric.calendar.SkyBlockCalendar;
 import net.swofty.type.skyblockgeneric.server.attribute.attributes.AttributeLong;
 import org.bson.Document;
+import tools.jackson.core.JacksonException;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,7 +37,7 @@ public class SkyBlockServerAttributes {
                 serverAttributes.put(data, attribute);
                 data.onLoad.accept(attribute);
             } catch (Exception e) {
-                e.printStackTrace();
+                Logger.error(e, "Failed to load or save server attributes");
             }
         });
     }
@@ -49,8 +50,8 @@ public class SkyBlockServerAttributes {
 
             try {
                 document.append(key.getKey(), attribute.getSerializedValue());
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
+            } catch (JacksonException e) {
+                Logger.error(e, "Failed to load or save server attributes");
             }
         });
         return document;

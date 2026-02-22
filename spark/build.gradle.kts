@@ -3,30 +3,27 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     java
     application
-    id("io.github.goooler.shadow") version "8.1.7"
+    id("com.gradleup.shadow") version "9.3.1"
 }
 
 group = "net.swofty"
 version = "3.0"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
-}
-
-repositories {
-    maven("https://jitpack.io")
 }
 
 dependencies {
-    implementation("net.minestom:minestom:2025.08.18-1.21.8") {
+    implementation("net.minestom:minestom:2025.12.20c-1.21.11") {
         exclude(group = "org.jboss.shrinkwrap.resolver", module = "shrinkwrap-resolver-depchain")
     }
-    implementation(files("dependencies/spark-1.10.1.10-minestom.jar"))
     implementation(project(":type.generic"))
+    implementation("com.google.guava:guava:33.5.0-jre")
+    api("me.lucko:spark-common:1.10.158-20260110.094844-1")
 }
 
 application {

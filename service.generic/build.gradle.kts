@@ -6,10 +6,10 @@ group = "net.swofty"
 version = "3.0"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
 }
 
@@ -20,8 +20,7 @@ repositories {
 
 dependencies {
     implementation(project(":commons"))
-    implementation("com.github.Swofty-Developments:AtlasRedisAPI:1.1.3")
-    // implementation("net.swofty:AtlasRedisAPI:1.1.4")
-    implementation("net.kyori:adventure-api:4.17.0")
-    implementation("net.kyori:adventure-text-serializer-gson:4.17.0")
+    implementation("com.github.Swofty-Developments:AtlasRedisAPI:1.1.5")
+    implementation("net.kyori:adventure-api:4.26.1")
+    implementation("net.kyori:adventure-text-serializer-gson:4.26.1")
 }

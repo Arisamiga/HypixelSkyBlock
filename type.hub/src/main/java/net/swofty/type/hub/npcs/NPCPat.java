@@ -2,15 +2,17 @@ package net.swofty.type.hub.npcs;
 
 import net.minestom.server.coordinate.Pos;
 import net.swofty.type.generic.user.HypixelPlayer;
-import net.swofty.type.hub.gui.GUIShopPat;
-import net.swofty.type.generic.entity.npc.NPCParameters;
 import net.swofty.type.generic.entity.npc.HypixelNPC;
-import net.swofty.type.skyblockgeneric.user.SkyBlockPlayer;
+import net.swofty.type.generic.entity.npc.configuration.HumanConfiguration;
+import net.swofty.type.hub.gui.GUIShopMineMerchant;
+import net.swofty.type.hub.gui.GUIShopPat;
+
+import net.swofty.type.generic.event.custom.NPCInteractEvent;
 
 public class NPCPat extends HypixelNPC {
 
     public NPCPat() {
-        super(new NPCParameters() {
+        super(new HumanConfiguration() {
             @Override
             public String[] holograms(HypixelPlayer player) {
                 return new String[]{"Pat", "§e§lCLICK"};
@@ -32,15 +34,15 @@ public class NPCPat extends HypixelNPC {
             }
 
             @Override
-            public boolean looking() {
+            public boolean looking(HypixelPlayer player) {
                 return true;
             }
         });
     }
 
     @Override
-    public void onClick(PlayerClickNPCEvent e) {
-        new GUIShopPat().open(e.player());
+    public void onClick(NPCInteractEvent e) {
+        e.player().openView(new GUIShopPat());
     }
 
 }

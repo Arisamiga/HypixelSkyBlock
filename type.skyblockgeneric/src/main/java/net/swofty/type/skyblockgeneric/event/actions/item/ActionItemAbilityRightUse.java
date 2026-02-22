@@ -3,7 +3,7 @@ package net.swofty.type.skyblockgeneric.event.actions.item;
 import lombok.SneakyThrows;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.item.ItemStack;
-import net.swofty.commons.item.UnderstandableSkyBlockItem;
+import net.swofty.commons.skyblock.item.UnderstandableSkyBlockItem;
 import net.swofty.type.generic.event.EventNodes;
 import net.swofty.type.generic.event.HypixelEvent;
 import net.swofty.type.generic.event.HypixelEventClass;
@@ -28,7 +28,15 @@ public class ActionItemAbilityRightUse implements HypixelEventClass {
 
         if (item.hasComponent(AbilityComponent.class)) {
             AbilityComponent abilityComponent = item.getComponent(AbilityComponent.class);
-            RegisteredAbility ability = abilityComponent.getAbility(RegisteredAbility.AbilityActivation.RIGHT_CLICK);
+
+            RegisteredAbility ability = null;
+            if (player.isSneaking()) {
+                ability = abilityComponent.getAbility(RegisteredAbility.AbilityActivation.SNEAK_RIGHT_CLICK);
+            }
+            if (ability == null) {
+                ability = abilityComponent.getAbility(RegisteredAbility.AbilityActivation.RIGHT_CLICK);
+            }
+
             if (ability != null) {
                 if (!ability.getCost().canUse(player)) {
                     ability.getCost().onFail(player);
@@ -42,8 +50,9 @@ public class ActionItemAbilityRightUse implements HypixelEventClass {
                     return;
                 }
 
-                abilityHandler.startAbilityCooldown(item);
-                ability.execute(player, item);
+                if(ability.execute(player, item)){
+                    abilityHandler.startAbilityCooldown(item);
+                }
             }
         }
     }

@@ -74,15 +74,53 @@ public class ServerOutboundMessage {
                                             Object rawMessage,
                                             Consumer<String> response) {
         UUID requestId = UUID.randomUUID();
-        UUID toCallback = UUID.fromString(RedisAPI.getInstance().getFilterId());
+        String callbackId = RedisAPI.getInstance().getFilterId();
+        if (callbackId == null) return;
+
         redisMessageListeners.put(requestId, response);
 
         String message = specification.translateToString(rawMessage);
 
         RedisAPI.getInstance().publishMessage(service.name(),
                 ChannelRegistry.getFromName(specification.channel()),
-                new ServiceProxyRequest(requestId, toCallback.toString(),
+                new ServiceProxyRequest(requestId, callbackId,
                         specification.channel(), message).toJSON().toString());
+    }
+
+    /**
+     * Fire-and-forget: send to a service and do not wait for or register a response.
+     */
+    public static void sendMessageToServiceFireAndForget(ServiceType service,
+                                                         ProtocolObject specification,
+                                                         Object rawMessage) {
+        UUID requestId = UUID.randomUUID();
+        String callback = null;
+        try {
+            callback = RedisAPI.getInstance().getFilterId();
+        } catch (Exception ignored) {
+        }
+
+        String message = specification.translateToString(rawMessage);
+        RedisAPI.getInstance().publishMessage(
+                service.name(),
+                ChannelRegistry.getFromName(specification.channel()),
+                new ServiceProxyRequest(
+                        requestId,
+                        callback != null ? callback : "proxy",
+                        specification.channel(),
+                        message
+                ).toJSON().toString()
+        );
+    }
+
+    /**
+     * Fire-and-forget broadcast to all service types.
+     */
+    public static void sendMessageToAllServicesFireAndForget(ProtocolObject specification,
+                                                             Object rawMessage) {
+        for (ServiceType serviceType : ServiceType.values()) {
+            sendMessageToServiceFireAndForget(serviceType, specification, rawMessage);
+        }
     }
 
     private static String getRequestTypeName(ProtocolObject<?, ?> protocolObject) {

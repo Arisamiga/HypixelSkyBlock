@@ -16,22 +16,36 @@ import net.minestom.server.instance.anvil.AnvilLoader;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.monitoring.BenchmarkManager;
 import net.minestom.server.monitoring.TickMonitor;
+import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.utils.time.TimeUnit;
-import net.swofty.commons.Configuration;
 import net.swofty.commons.CustomWorlds;
+import net.swofty.commons.ServerType;
+import net.swofty.commons.config.ConfigProvider;
+import net.swofty.type.generic.block.PlayerHeadBlockHandler;
+import net.swofty.type.generic.block.SignBlockHandler;
 import net.swofty.type.generic.command.HypixelCommand;
+import net.swofty.type.generic.data.GameDataHandlerRegistry;
 import net.swofty.type.generic.data.HypixelDataHandler;
+import net.swofty.type.generic.data.handlers.BedWarsDataHandler;
+import net.swofty.type.generic.data.handlers.MurderMysteryDataHandler;
+import net.swofty.type.generic.data.handlers.PrototypeLobbyDataHandler;
+import net.swofty.type.generic.data.handlers.SkywarsDataHandler;
 import net.swofty.type.generic.data.mongodb.AttributeDatabase;
 import net.swofty.type.generic.data.mongodb.AuthenticationDatabase;
+import net.swofty.type.generic.data.mongodb.BedWarsStatsDatabase;
 import net.swofty.type.generic.data.mongodb.ProfilesDatabase;
 import net.swofty.type.generic.data.mongodb.UserDatabase;
-import net.swofty.type.generic.entity.animalnpc.HypixelAnimalNPC;
+
+
 import net.swofty.type.generic.entity.npc.HypixelNPC;
-import net.swofty.type.generic.entity.villager.HypixelVillagerNPC;
 import net.swofty.type.generic.event.HypixelEventClass;
 import net.swofty.type.generic.event.HypixelEventHandler;
+import net.swofty.type.generic.achievement.AchievementRegistry;
+import net.swofty.type.generic.achievement.AchievementStatisticsService;
+import net.swofty.type.generic.leaderboard.LeaderboardService;
 import net.swofty.type.generic.packet.HypixelPacketClientListener;
 import net.swofty.type.generic.packet.HypixelPacketServerListener;
+import net.swofty.type.generic.quest.QuestRegistry;
 import net.swofty.type.generic.redis.RedisOriginServer;
 import net.swofty.type.generic.user.HypixelPlayer;
 import org.jetbrains.annotations.Nullable;
@@ -54,14 +68,20 @@ public record HypixelGenericLoader(HypixelTypeLoader loader) {
     public void initialize(MinecraftServer server) {
         HypixelGenericLoader.server = server;
         HypixelConst.setTypeLoader(loader);
+        final boolean isSkyBlockType = loader.getType().isSkyBlock();
+        final boolean isRavengardType = loader instanceof RavengardTypeLoader;
         InstanceManager instanceManager = MinecraftServer.getInstanceManager();
 
-        /**
-         * Handle instances
-         */
+        // Handle instances
         CustomWorlds mainInstance = loader.getMainInstance();
         if (mainInstance != null) {
-            InstanceContainer temporaryInstance = instanceManager.createInstanceContainer();
+            InstanceContainer temporaryInstance;
+            // If a custom DimensionType is provided, use that
+            if (loader.getDimensionType() != null) {
+                temporaryInstance = instanceManager.createInstanceContainer(loader.getDimensionType());
+            } else {
+                temporaryInstance = instanceManager.createInstanceContainer();
+            }
             temporaryInstance.setChunkLoader(new AnvilLoader(loader.getMainInstance().getFolderName()));
 
             HypixelConst.setInstanceContainer(instanceManager.createSharedInstance(temporaryInstance));
@@ -70,9 +90,7 @@ public record HypixelGenericLoader(HypixelTypeLoader loader) {
         HypixelConst.getEmptyInstance().setBlock(0, 99, 0, Block.BEDROCK);
         HypixelConst.setEventHandler(MinecraftServer.getGlobalEventHandler());
 
-        /**
-         * Register commands
-         */
+        // Register commands
         MinecraftServer.getCommandManager().setUnknownCommandCallback((sender, command) -> {
             // Large amount of Clients (such as Lunar) send a `/tip all` when joining
             // due to the scoreboard containing `hypixel.net`
@@ -83,20 +101,19 @@ public record HypixelGenericLoader(HypixelTypeLoader loader) {
             try {
                 MinecraftServer.getCommandManager().register(command.getCommand());
             } catch (Exception e) {
-                Logger.error("Failed to register command " + command.getCommand().getName() + " in class " + command.getClass().getSimpleName());
-                e.printStackTrace();
+                Logger.error(e, "Failed to register command {} in class {}",
+                        command.getCommand().getName(), command.getClass().getSimpleName());
             }
         });
 
-        /**
-         * Register events
-         */
+        // Register events
         loader.getTraditionalEvents().forEach(HypixelEventHandler::registerEventMethods);
         loader.getCustomEvents().forEach(HypixelEventHandler::registerEventMethods);
         loopThroughPackage("net.swofty.type.generic.event.actions", HypixelEventClass.class).forEach(HypixelEventHandler::registerEventMethods);
+        loopThroughPackage("net.swofty.type.generic.gui.v2.event", HypixelEventClass.class).forEach(HypixelEventHandler::registerEventMethods);
         // SkyBlockGenericLoader always runs after the generic loader, so if we are a SkyBlock server,
         // we will let that loader register the events
-        if (!loader.getType().isSkyBlock()) {
+        if (!isSkyBlockType && !isRavengardType) {
             HypixelEventHandler.register(HypixelConst.getEventHandler());
         }
 
@@ -108,7 +125,7 @@ public record HypixelGenericLoader(HypixelTypeLoader loader) {
                 .forEach(HypixelPacketClientListener::cacheListener);
         loopThroughPackage("net.swofty.type.generic.packet.packets.server", HypixelPacketServerListener.class)
                 .forEach(HypixelPacketServerListener::cacheListener);
-        if (!loader.getType().isSkyBlock()) {
+        if (!isSkyBlockType && !isRavengardType) {
             HypixelPacketClientListener.register(HypixelConst.getEventHandler());
             HypixelPacketServerListener.register(HypixelConst.getEventHandler());
         }
@@ -117,7 +134,7 @@ public record HypixelGenericLoader(HypixelTypeLoader loader) {
          * Start generic tablist
          * SkyBlock has its own format so let SkyBlockGenericLoader handle it
          */
-        if (!loader.getType().isSkyBlock()) {
+        if (!isSkyBlockType && !(loader.getType() == ServerType.BEDWARS_GAME)) {
             MinecraftServer.getGlobalEventHandler().addListener(ServerTickMonitorEvent.class, event ->
                     LAST_TICK.set(event.getTickMonitor()));
             BenchmarkManager benchmarkManager = MinecraftServer.getBenchmarkManager();
@@ -157,9 +174,14 @@ public record HypixelGenericLoader(HypixelTypeLoader loader) {
         loader.getTablistManager().runScheduler(MinecraftServer.getSchedulerManager());
 
         /**
+         * Presence heartbeat to keep friend status fresh
+         */
+        net.swofty.type.generic.presence.PresenceHeartbeat.start();
+
+        /**
          * Register databases
          */
-        ConnectionString cs = new ConnectionString(Configuration.get("mongodb"));
+        ConnectionString cs = new ConnectionString(ConfigProvider.settings().getMongodb());
         MongoClientSettings settings = MongoClientSettings.builder().applyConnectionString(cs).build();
         MongoClient mongoClient = MongoClients.create(settings);
 
@@ -167,24 +189,44 @@ public record HypixelGenericLoader(HypixelTypeLoader loader) {
         ProfilesDatabase.connect(mongoClient);
         AttributeDatabase.connect(mongoClient);
         UserDatabase.connect(mongoClient);
+        BedWarsStatsDatabase.connect(mongoClient);
 
-        /**
-         * Register Hypixel NPCs
-         */
+        // Initialize leaderboard service (uses Redis for O(log N) leaderboard operations)
+        LeaderboardService.connect(ConfigProvider.settings().getRedisUri());
+
+        // Load achievement and quest registries from YAML configuration
+        AchievementRegistry.loadFromConfiguration();
+        QuestRegistry.loadFromConfiguration();
+
+        // Initialize achievement statistics service for unlock percentages
+        AchievementStatisticsService.initialize();
+
+        // Register game data handlers
+        GameDataHandlerRegistry.register(new BedWarsDataHandler());
+        GameDataHandlerRegistry.register(new PrototypeLobbyDataHandler());
+        GameDataHandlerRegistry.register(new MurderMysteryDataHandler());
+        GameDataHandlerRegistry.register(new SkywarsDataHandler());
+
+        // Register Block Handlers
+        MinecraftServer.getBlockManager().registerHandler(PlayerHeadBlockHandler.KEY, PlayerHeadBlockHandler::new);
+        MinecraftServer.getBlockManager().registerHandler(SignBlockHandler.KEY, SignBlockHandler::new);
+
+        // Register NPCs
         if (mainInstance != null) {
             loader.getNPCs().forEach(HypixelNPC::register);
-            loader.getVillagerNPCs().forEach(HypixelVillagerNPC::register);
-            loader.getAnimalNPCs().forEach(HypixelAnimalNPC::register);
         }
 
-        /**
-         * Register player provider given we aren't a SkyBlock server
-         * If we are a SkyBlock server, we will handle the player provider in the SkyBlockGenericLoader
-         */
-        if (!loader.getType().isSkyBlock()) {
-            /**
-             * Handle ConnectionManager
-             */
+        // Update NPCs for loaded players
+        MinecraftServer.getSchedulerManager().scheduleTask(() -> {
+            for (HypixelPlayer player : getLoadedPlayers()) {
+                HypixelNPC.updateForPlayer(player);
+            }
+        }, TaskSchedule.tick(2), TaskSchedule.tick(2));
+
+        // Register player provider given we aren't a SkyBlock server
+        // If we are a SkyBlock server, we will handle the player provider in the SkyBlockGenericLoader
+        if (!isSkyBlockType && !isRavengardType) {
+            // Handle ConnectionManager
             MinecraftServer.getConnectionManager().setPlayerProvider((playerConnection, gameProfile) -> {
                 HypixelPlayer player = new HypixelPlayer(playerConnection, gameProfile);
 
@@ -200,6 +242,7 @@ public record HypixelGenericLoader(HypixelTypeLoader loader) {
                 return player;
             });
         }
+
     }
 
     public static List<HypixelPlayer> getLoadedPlayers() {

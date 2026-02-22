@@ -8,10 +8,9 @@ collections:
     - type: XP
       data:
         xp: 4
-    - type: SPECIAL_UNLOCK
+    - type: RECIPE_UNLOCK
       data:
         unlockedItemType: OAK_MINION
-        isMinionRecipes: true
   - amount: 100
     rewards:
     - type: XP
@@ -22,68 +21,18 @@ collections:
     - type: XP
       data:
         xp: 4
-    - type: RECIPE
+    - type: RECIPE_UNLOCK
       data:
-        recipeType: FORAGING
-        craftingMaterial: LEAFLET_HELMET
-        resultAmount: 1
-        pattern:
-          - AAA
-          - AOA
-        ingredients:
-          A:
-            type: OAK_LEAVES
-            amount: 1
-          O:
-            type: AIR
-            amount: 1
-    - type: RECIPE
+        unlockedItemType: LEAFLET_HELMET
+    - type: RECIPE_UNLOCK
       data:
-        recipeType: FORAGING
-        craftingMaterial: LEAFLET_LEGGINGS
-        resultAmount: 1
-        pattern:
-          - AAA
-          - AOA
-          - AOA
-        ingredients:
-          A:
-            type: OAK_LEAVES
-            amount: 1
-          O:
-            type: AIR
-            amount: 1
-    - type: RECIPE
+        unlockedItemType: LEAFLET_CHESTPLATE
+    - type: RECIPE_UNLOCK
       data:
-        recipeType: FORAGING
-        craftingMaterial: LEAFLET_BOOTS
-        resultAmount: 1
-        pattern:
-          - AOA
-          - AOA
-        ingredients:
-          A:
-            type: OAK_LEAVES
-            amount: 1
-          O:
-            type: AIR
-            amount: 1
-    - type: RECIPE
+        unlockedItemType: LEAFLET_LEGGINGS
+    - type: RECIPE_UNLOCK
       data:
-        recipeType: FORAGING
-        craftingMaterial: LEAFLET_CHESTPLATE
-        resultAmount: 1
-        pattern:
-          - AOA
-          - AAA
-          - AAA
-        ingredients:
-          A:
-            type: OAK_LEAVES
-            amount: 1
-          O:
-            type: AIR
-            amount: 1
+        unlockedItemType: LEAFLET_BOOTS
   - amount: 500
     rewards:
     - type: XP
@@ -99,12 +48,9 @@ collections:
     - type: XP
       data:
         xp: 4
-    - type: SPECIAL_UNLOCK
+    - type: RECIPE_UNLOCK
       data:
         unlockedItemType: ENCHANTED_OAK_LOG
-        isEnchantedRecipe: true
-        recipeType: FORAGING
-        craftingMaterial: OAK_LOG
   - amount: 5000
     rewards:
     - type: XP
@@ -127,10 +73,9 @@ collections:
     - type: XP
       data:
         xp: 4
-    - type: SPECIAL_UNLOCK
+    - type: RECIPE_UNLOCK
       data:
         unlockedItemType: SPRUCE_MINION
-        isMinionRecipes: true
   - amount: 100
     rewards:
     - type: XP
@@ -151,12 +96,9 @@ collections:
     - type: XP
       data:
         xp: 4
-    - type: SPECIAL_UNLOCK
+    - type: RECIPE_UNLOCK
       data:
         unlockedItemType: ENCHANTED_SPRUCE_LOG
-        isEnchantedRecipe: true
-        recipeType: FORAGING
-        craftingMaterial: SPRUCE_LOG
   - amount: 5000
     rewards:
     - type: XP
@@ -184,10 +126,9 @@ collections:
     - type: XP
       data:
         xp: 4
-    - type: SPECIAL_UNLOCK
+    - type: RECIPE_UNLOCK
       data:
         unlockedItemType: BIRCH_MINION
-        isMinionRecipes: true
   - amount: 100
     rewards:
     - type: XP
@@ -198,6 +139,9 @@ collections:
     - type: XP
       data:
         xp: 4
+    - type: RECIPE_UNLOCK
+      data:
+        unlockedItemType: ENCHANTED_BIRCH_LOG
   - amount: 500
     rewards:
     - type: XP
@@ -213,32 +157,33 @@ collections:
     - type: XP
       data:
         xp: 4
-    - type: SPECIAL_UNLOCK
+    - type: RECIPE_UNLOCK
       data:
-        unlockedItemType: ENCHANTED_BIRCH_LOG
-        isEnchantedRecipe: true
-        recipeType: FORAGING
-        craftingMaterial: BIRCH_LOG
+        unlockedItemType: SMALL_FORAGING_SACK
   - amount: 5000
     rewards:
     - type: XP
       data:
         xp: 4
+    - type: RECIPE_UNLOCK
+      data:
+        unlockedItemType: MEDIUM_FORAGING_SACK
   - amount: 10000
     rewards:
     - type: XP
       data:
         xp: 4
+    - type: RECIPE_UNLOCK
+      data:
+        unlockedItemType: LARGE_FORAGING_SACK
   - amount: 25000
     rewards:
     - type: XP
       data:
         xp: 4
-  - amount: 50000
-    rewards:
-    - type: XP
+    - type: RECIPE_UNLOCK
       data:
-        xp: 4
+        unlockedItemType: LARGE_ENCHANTED_FORAGING_SACK
 - itemType: JUNGLE_LOG
   rewards:
   - amount: 50
@@ -246,10 +191,9 @@ collections:
     - type: XP
       data:
         xp: 4
-    - type: SPECIAL_UNLOCK
+    - type: RECIPE_UNLOCK
       data:
         unlockedItemType: JUNGLE_MINION
-        isMinionRecipes: true
   - amount: 100
     rewards:
     - type: XP
@@ -275,12 +219,9 @@ collections:
     - type: XP
       data:
         xp: 4
-    - type: SPECIAL_UNLOCK
+    - type: RECIPE_UNLOCK
       data:
         unlockedItemType: ENCHANTED_JUNGLE_LOG
-        isEnchantedRecipe: true
-        recipeType: FORAGING
-        craftingMaterial: JUNGLE_LOG
   - amount: 5000
     rewards:
     - type: XP
@@ -303,10 +244,9 @@ collections:
     - type: XP
       data:
         xp: 4
-    - type: SPECIAL_UNLOCK
+    - type: RECIPE_UNLOCK
       data:
         unlockedItemType: ACACIA_MINION
-        isMinionRecipes: true
   - amount: 100
     rewards:
     - type: XP
@@ -332,12 +272,9 @@ collections:
     - type: XP
       data:
         xp: 4
-    - type: SPECIAL_UNLOCK
+    - type: RECIPE_UNLOCK
       data:
         unlockedItemType: ENCHANTED_ACACIA_LOG
-        isEnchantedRecipe: true
-        recipeType: FORAGING
-        craftingMaterial: ACACIA_LOG
   - amount: 5000
     rewards:
     - type: XP
@@ -360,10 +297,9 @@ collections:
     - type: XP
       data:
         xp: 4
-    - type: SPECIAL_UNLOCK
+    - type: RECIPE_UNLOCK
       data:
         unlockedItemType: DARK_OAK_MINION
-        isMinionRecipes: true
   - amount: 100
     rewards:
     - type: XP
@@ -384,12 +320,9 @@ collections:
     - type: XP
       data:
         xp: 4
-    - type: SPECIAL_UNLOCK
+    - type: RECIPE_UNLOCK
       data:
         unlockedItemType: ENCHANTED_DARK_OAK_LOG
-        isEnchantedRecipe: true
-        recipeType: FORAGING
-        craftingMaterial: DARK_OAK_LOG
   - amount: 5000
     rewards:
     - type: XP
@@ -413,3 +346,280 @@ collections:
     - type: XP
       data:
         xp: 4
+- itemType: FIG_LOG
+  rewards:
+    - amount: 500
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 1000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+        - type: RECIPE_UNLOCK
+          data:
+            unlockedItemType: ENCHANTED_FIG_LOG
+    - amount: 2500
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 5000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 10000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 25000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 50000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 100000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 150000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+- itemType: TENDER_WOOD
+  rewards:
+    - amount: 10
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 25
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 50
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 100
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+        - type: RECIPE_UNLOCK
+          data:
+            unlockedItemType: ENCHANTED_TENDER_WOOD
+    - amount: 200
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 400
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 600
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 800
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 1000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+- itemType: MANGROVE_LOG
+  rewards:
+    - amount: 500
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 1000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+        - type: RECIPE_UNLOCK
+          data:
+            unlockedItemType: ENCHANTED_MANGROVE_LOG
+    - amount: 2500
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 5000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 10000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 25000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 50000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 100000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 150000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+- itemType: VINESAP
+  rewards:
+    - amount: 10
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 25
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 50
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 100
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+        - type: RECIPE_UNLOCK
+          data:
+            unlockedItemType: ENCHANTED_VINESAP
+    - amount: 200
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 400
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 600
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 800
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 1000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+- itemType: LUSHLILAC
+  rewards:
+    - amount: 25
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 50
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 100
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 250
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 500
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+- itemType: SEA_LUMIES
+  rewards:
+    - amount: 25
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 50
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+        - type: RECIPE_UNLOCK
+          data:
+            unlockedItemType: ENCHANTED_SEA_LUMIES
+    - amount: 100
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 250
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 500
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 750
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 1000
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 2500
+      rewards:
+        - type: XP
+          data:
+            xp: 4
+    - amount: 5000
+      rewards:
+        - type: XP
+          data:
+            xp: 4

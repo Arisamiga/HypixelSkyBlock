@@ -22,7 +22,10 @@ public class ActionRegionBlockPlace implements HypixelEventClass {
             return;
         }
 
-        if (!HypixelConst.isIslandServer()) event.setCancelled(true);
+        if (!HypixelConst.isIslandServer()) {
+            event.setCancelled(true);
+            return;
+        }
 
         int islandSizePlus = (int) Math.floor((double) ISLAND_SIZE/2);
         int islandSizeMinus = -islandSizePlus;

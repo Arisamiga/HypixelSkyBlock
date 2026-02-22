@@ -1,8 +1,8 @@
 package net.swofty.type.skyblockgeneric.enchantment.impl;
 
 import net.minestom.server.entity.LivingEntity;
-import net.swofty.commons.statistics.ItemStatistic;
-import net.swofty.commons.statistics.ItemStatistics;
+import net.swofty.commons.skyblock.statistics.ItemStatistic;
+import net.swofty.commons.skyblock.statistics.ItemStatistics;
 import net.swofty.type.skyblockgeneric.collection.CustomCollectionAward;
 import net.swofty.type.skyblockgeneric.enchantment.abstr.Ench;
 import net.swofty.type.skyblockgeneric.enchantment.abstr.EnchFromTable;
@@ -34,7 +34,6 @@ public class EnchantmentFirstStrike implements Ench, EnchFromTable, EventBasedEn
         ));
 
         if (player.hasCustomCollectionAward(CustomCollectionAward.FIRST_STRIKE_DISCOUNT)) {
-            // Discount 25%
             levels.replaceAll((k, v) -> (int) (v * 0.75));
         }
 
@@ -73,7 +72,6 @@ public class EnchantmentFirstStrike implements Ench, EnchFromTable, EventBasedEn
         ));
 
         if (player.hasCustomCollectionAward(CustomCollectionAward.FIRST_STRIKE_DISCOUNT)) {
-            // Discount 25%
             levels.replaceAll((k, v) -> (int) (v * 0.75));
         }
 

@@ -3,7 +3,7 @@ package net.swofty.type.skyblockgeneric.bazaar;
 import lombok.Getter;
 import net.minestom.server.item.Material;
 import net.swofty.commons.StringUtility;
-import net.swofty.commons.item.ItemType;
+import net.swofty.commons.skyblock.item.ItemType;
 
 import java.util.AbstractMap;
 import java.util.Map;
@@ -13,7 +13,7 @@ import java.util.Set;
 public enum BazaarCategories {
     FARMING(Material.GOLDEN_HOE, Material.YELLOW_STAINED_GLASS_PANE, "§e",
             new BazaarItemSet(ItemType.WHEAT, "Wheat & Seeds",
-                    ItemType.WHEAT, ItemType.ENCHANTED_BREAD, ItemType.HAY_BALE, ItemType.ENCHANTED_HAY_BALE, ItemType.WHEAT_SEEDS, ItemType.ENCHANTED_SEEDS),
+                    ItemType.WHEAT, ItemType.ENCHANTED_BREAD, ItemType.HAY_BALE, ItemType.ENCHANTED_HAY_BALE, ItemType.SEEDS, ItemType.ENCHANTED_SEEDS),
             new BazaarItemSet(ItemType.CARROT, "Carrot",
                     ItemType.CARROT, ItemType.ENCHANTED_CARROT, ItemType.ENCHANTED_GOLDEN_CARROT),
             new BazaarItemSet(ItemType.POTATO, "Potato",
@@ -102,7 +102,7 @@ public enum BazaarCategories {
             new BazaarItemSet(ItemType.GHAST_TEAR, "Ghast Tear",
                     ItemType.GHAST_TEAR, ItemType.ENCHANTED_GHAST_TEAR),
             new BazaarItemSet(ItemType.SLIME_BALL, "Slime Drops",
-                    ItemType.SLIME_BALL, ItemType.ENCHANTED_SLIMEBALL, ItemType.ENCHANTED_SLIME_BLOCK, ItemType.MAGMA_CREAM, ItemType.ENCHANTED_MAGMA_CREAM, ItemType.WHIPPED_MAGMA_CREAM),
+                    ItemType.SLIME_BALL, ItemType.ENCHANTED_SLIME_BALL, ItemType.ENCHANTED_SLIME_BLOCK, ItemType.MAGMA_CREAM, ItemType.ENCHANTED_MAGMA_CREAM, ItemType.WHIPPED_MAGMA_CREAM),
             new BazaarItemSet(ItemType.BLAZE_ROD, "Blaze Rod",
                     ItemType.BLAZE_ROD, ItemType.ENCHANTED_BLAZE_POWDER, ItemType.ENCHANTED_BLAZE_ROD),
             new BazaarItemSet(ItemType.FEATHER, "Mythological",

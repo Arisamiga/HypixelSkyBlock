@@ -9,24 +9,30 @@ import lombok.SneakyThrows;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.adventure.audience.Audiences;
+import net.minestom.server.coordinate.CoordConversion;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.event.server.ServerTickMonitorEvent;
+import net.minestom.server.instance.Chunk;
 import net.minestom.server.monitoring.BenchmarkManager;
 import net.minestom.server.monitoring.TickMonitor;
+import net.minestom.server.registry.RegistryKey;
 import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.utils.time.TimeUnit;
 import net.minestom.server.world.DimensionType;
+import net.minestom.server.world.biome.Biome;
 import net.swofty.commons.*;
-import net.swofty.commons.item.ItemType;
-import net.swofty.commons.item.attribute.ItemAttribute;
-import net.swofty.commons.item.reforge.ReforgeLoader;
+import net.swofty.commons.config.ConfigProvider;
+import net.swofty.commons.skyblock.item.ItemType;
+import net.swofty.commons.skyblock.item.attribute.ItemAttribute;
+import net.swofty.commons.skyblock.item.reforge.ReforgeLoader;
 import net.swofty.type.generic.HypixelConst;
 import net.swofty.type.generic.HypixelGenericLoader;
 import net.swofty.type.generic.HypixelTypeLoader;
 import net.swofty.type.generic.data.mongodb.*;
 import net.swofty.type.generic.packet.HypixelPacketClientListener;
 import net.swofty.type.generic.packet.HypixelPacketServerListener;
+import net.swofty.type.skyblockgeneric.abiphone.AbiphoneNPC;
+import net.swofty.type.skyblockgeneric.abiphone.AbiphoneRegistry;
 import net.swofty.type.skyblockgeneric.block.attribute.BlockAttribute;
 import net.swofty.type.skyblockgeneric.block.placement.BlockPlacementManager;
 import net.swofty.type.skyblockgeneric.calendar.SkyBlockCalendar;
@@ -41,10 +47,7 @@ import net.swofty.type.generic.entity.hologram.PlayerHolograms;
 import net.swofty.type.generic.entity.hologram.ServerHolograms;
 import net.swofty.type.skyblockgeneric.entity.mob.MobRegistry;
 import net.swofty.type.skyblockgeneric.entity.mob.SkyBlockMob;
-import net.swofty.type.generic.entity.npc.NPCDialogue;
-import net.swofty.type.generic.entity.npc.HypixelNPC;
-import net.swofty.type.generic.entity.villager.NPCVillagerDialogue;
-import net.swofty.type.generic.entity.villager.HypixelVillagerNPC;
+
 import net.swofty.type.generic.event.HypixelEventClass;
 import net.swofty.type.generic.event.HypixelEventHandler;
 import net.swofty.type.skyblockgeneric.event.value.SkyBlockValueEvent;
@@ -54,6 +57,8 @@ import net.swofty.type.skyblockgeneric.item.components.CraftableComponent;
 import net.swofty.type.skyblockgeneric.item.components.MuseumComponent;
 import net.swofty.type.skyblockgeneric.item.components.ServerOrbComponent;
 import net.swofty.type.skyblockgeneric.item.crafting.SkyBlockRecipe;
+import net.swofty.type.skyblockgeneric.item.handlers.ability.AbilityRegistry;
+import net.swofty.type.skyblockgeneric.item.handlers.ability.RegisteredPassiveAbility;
 import net.swofty.type.skyblockgeneric.item.set.impl.SetRepeatable;
 import net.swofty.type.skyblockgeneric.item.updater.PlayerItemUpdater;
 import net.swofty.type.skyblockgeneric.levels.CustomLevelAward;
@@ -67,17 +72,19 @@ import net.swofty.type.skyblockgeneric.museum.MuseumableItemCategory;
 import net.swofty.type.skyblockgeneric.noteblock.SkyBlockSongsHandler;
 import net.swofty.type.skyblockgeneric.redis.RedisAuthenticate;
 import net.swofty.type.generic.redis.RedisOriginServer;
-import net.swofty.type.skyblockgeneric.region.SkyBlockMiningConfiguration;
+import net.swofty.type.skyblockgeneric.region.SkyBlockRegenConfiguration;
 import net.swofty.type.skyblockgeneric.region.SkyBlockRegion;
 import net.swofty.type.skyblockgeneric.server.attribute.SkyBlockServerAttributes;
 import net.swofty.type.skyblockgeneric.server.eventcaller.CustomEventCaller;
 import net.swofty.type.skyblockgeneric.user.SkyBlockIsland;
 import net.swofty.type.skyblockgeneric.user.SkyBlockPlayer;
 import net.swofty.type.skyblockgeneric.user.SkyBlockScoreboard;
+import net.swofty.type.skyblockgeneric.user.StashReminder;
 import net.swofty.type.generic.user.categories.CustomGroups;
 import net.swofty.type.skyblockgeneric.user.fairysouls.FairySoul;
 import net.swofty.type.skyblockgeneric.user.fairysouls.FairySoulZone;
 import net.swofty.type.skyblockgeneric.user.statistics.PlayerStatistics;
+import net.swofty.type.skyblockgeneric.user.statistics.TemporaryStatistic;
 import net.swofty.type.skyblockgeneric.utility.LaunchPads;
 import net.swofty.type.generic.utility.MathUtility;
 import org.jetbrains.annotations.Nullable;
@@ -89,6 +96,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 public record SkyBlockGenericLoader(HypixelTypeLoader typeLoader) {
@@ -110,7 +118,7 @@ public record SkyBlockGenericLoader(HypixelTypeLoader typeLoader) {
         /**
          * Register SkyBlock databases
          */
-        ConnectionString cs = new ConnectionString(Configuration.get("mongodb"));
+        ConnectionString cs = new ConnectionString(ConfigProvider.settings().getMongodb());
         MongoClientSettings settings = MongoClientSettings.builder().applyConnectionString(cs).build();
         MongoClient mongoClient = MongoClients.create(settings);
 
@@ -140,8 +148,7 @@ public record SkyBlockGenericLoader(HypixelTypeLoader typeLoader) {
                             try {
                                 ItemConfigParser.parseItem(itemConfig);
                             } catch (Exception e) {
-                                Logger.error("Failed to parse item " + itemConfig.get("id"));
-                                e.printStackTrace();
+                                Logger.error(e, "Failed to parse item configuration: {}", itemConfig.get("id"));
                             }
                         }
                     } else {
@@ -162,28 +169,15 @@ public record SkyBlockGenericLoader(HypixelTypeLoader typeLoader) {
             try {
                 MinecraftServer.getCommandManager().register(command.getCommand());
             } catch (Exception e) {
-                Logger.error("Failed to register command " + command.getCommand().getName() + " in class " + command.getClass().getSimpleName());
-                e.printStackTrace();
+                Logger.error(e, "Failed to register command {} in class {}",
+                        command.getCommand().getName(), command.getClass().getSimpleName());
             }
         });
 
-        /**
-         * Register SkyBlock NPCs
-         */
-        if (mainInstance != null) {
-            loopThroughPackage("net.swofty.type.skyblockgeneric.entity.npc.npcs", HypixelNPC.class)
-                    .forEach(HypixelNPC::register);
-            loopThroughPackage("net.swofty.type.skyblockgeneric.entity.npc.npcs", NPCDialogue.class)
-                    .forEach(HypixelNPC::register);
-            loopThroughPackage("net.swofty.type.skyblockgeneric.entity.villager.villagers", HypixelVillagerNPC.class)
-                    .forEach(HypixelVillagerNPC::register);
-            loopThroughPackage("net.swofty.type.skyblockgeneric.entity.villager.villagers", NPCVillagerDialogue.class)
-                    .forEach(HypixelVillagerNPC::register);
-        }
+        loopThroughPackage("net.swofty.type.skyblockgeneric.abiphone.impl", AbiphoneNPC.class)
+                .forEach(AbiphoneRegistry::registerContact);
 
-        /**
-         * Register entities
-         */
+        // Register entities
         loopThroughPackage("net.swofty.type.skyblockgeneric.entity.mob.mobs", SkyBlockMob.class)
                 .forEach(mob -> MobRegistry.registerExtraMob(mob.getClass()));
 
@@ -219,23 +213,40 @@ public record SkyBlockGenericLoader(HypixelTypeLoader typeLoader) {
                     .append(Component.newline())
                     .append(Component.text("§7TPS: §8" + TPS))
                     .append(Component.newline());
-            final Component footer = Component.newline()
-                    .append(Component.text("§a§lActive Effects"))
-                    .append(Component.newline())
-                    .append(Component.text("§7No effects active. Drink potions or splash them on the"))
-                    .append(Component.newline())
-                    .append(Component.text("§7ground to buff yourself!"))
-                    .append(Component.newline())
-                    .append(Component.newline())
-                    .append(Component.text("§d§lCookie Buff"))
-                    .append(Component.newline())
-                    .append(Component.text("§7Not active! Obtain booster cookies from the community"))
-                    .append(Component.newline())
-                    .append(Component.text("§7shop in the hub."))
-                    .append(Component.newline())
-                    .append(Component.newline())
-                    .append(Component.text("§aRanks, Boosters & MORE! §c§lSTORE.HYPIXEL.NET"));
-            Audiences.players().sendPlayerListHeaderAndFooter(header, footer);
+
+            // Send per-player footer with their active effects
+            for (SkyBlockPlayer player : players) {
+                Component footer = Component.newline()
+                        .append(Component.text("§a§lActive Effects"))
+                        .append(Component.newline());
+
+                List<TemporaryStatistic> activeEffects = player.getStatistics().getDisplayableActiveEffects();
+                if (activeEffects.isEmpty()) {
+                    footer = footer.append(Component.text("§7No effects active. Drink potions or splash them on the"))
+                            .append(Component.newline())
+                            .append(Component.text("§7ground to buff yourself!"));
+                } else {
+                    for (TemporaryStatistic effect : activeEffects) {
+                        String color = effect.getDisplayColor() != null ? effect.getDisplayColor() : "§7";
+                        String name = effect.getDisplayName();
+                        String duration = formatEffectDuration(effect.getRemainingMs());
+                        footer = footer.append(Component.text(color + name + " §f" + duration))
+                                .append(Component.newline());
+                    }
+                }
+
+                footer = footer.append(Component.newline())
+                        .append(Component.text("§d§lCookie Buff"))
+                        .append(Component.newline())
+                        .append(Component.text("§7Not active! Obtain booster cookies from the community"))
+                        .append(Component.newline())
+                        .append(Component.text("§7shop in the hub."))
+                        .append(Component.newline())
+                        .append(Component.newline())
+                        .append(Component.text("§aRanks, Boosters & MORE! §c§lSTORE.HYPIXEL.NET"));
+
+                player.sendPlayerListHeaderAndFooter(header, footer);
+            }
         }).repeat(10, TimeUnit.SERVER_TICK).schedule();
 
 
@@ -278,17 +289,23 @@ public record SkyBlockGenericLoader(HypixelTypeLoader typeLoader) {
         HypixelPacketClientListener.register(HypixelConst.getEventHandler());
         HypixelPacketServerListener.register(HypixelConst.getEventHandler());
 
-        /**
-         * Load regions
-         */
+        // Load regions
         SkyBlockRegion.cacheRegions();
-        SkyBlockMiningConfiguration.startRepeater(MinecraftServer.getSchedulerManager());
+        SkyBlockRegenConfiguration.startRepeater(MinecraftServer.getSchedulerManager());
         MinecraftServer.getDimensionTypeRegistry().register(
                 Key.key("skyblock:island"),
                 DimensionType.builder()
-                        .ambientLight(2)
+                        .ambientLight(1)
                         .build());
         SkyBlockIsland.runVacantLoop(MinecraftServer.getSchedulerManager());
+
+        /*SkyBlockRegion.getRegions().forEach(region -> {
+            if (region.getServerType() != HypixelConst.getTypeLoader().getType()) return;
+            SkyBlockBiomeConfiguration biomeConfig = region.getType().getBiomeHandler();
+            if (biomeConfig == null) return;
+            RegistryKey<Biome> biomeKey = MinecraftServer.getBiomeRegistry().register(biomeConfig.getKey(), biomeConfig.getBiome());
+            setBiome(region.getFirstLocation(), region.getSecondLocation(), biomeKey);
+        });*/
 
         /**
          * Load fairy souls
@@ -306,10 +323,9 @@ public record SkyBlockGenericLoader(HypixelTypeLoader typeLoader) {
         CustomGroups.registerAudiences();
         PlayerStatistics.run();
 
-        /**
-         * Start repeaters
-         */
+        // Start repeaters
         SkyBlockScoreboard.start();
+        StashReminder.start(MinecraftServer.getSchedulerManager());
         PlayerHolograms.updateAll(MinecraftServer.getSchedulerManager());
 
         /**
@@ -393,10 +409,67 @@ public record SkyBlockGenericLoader(HypixelTypeLoader typeLoader) {
         CustomEventCaller.start(); // Value events are SkyBlock-specific
         HypixelEventHandler.register(HypixelConst.getEventHandler());
 
+        AbilityRegistry.getRegisteredAbilities().forEach(((_, registeredAbility) -> {
+            if (registeredAbility instanceof RegisteredPassiveAbility passiveAbility) {
+                passiveAbility.getPassiveAction().forEach(RegisteredPassiveAbility.Action::register);
+            }
+        }));
+
         /**
          * Cache SkyBlock levels
          */
         SkyBlockLevelRequirement.loadFromYaml();
+
+        /**
+         * Load item recipes
+         */
+        Arrays.stream(ItemType.values()).forEach(type -> {
+            SkyBlockItem item = new SkyBlockItem(type);
+            if (item.hasComponent(CraftableComponent.class)) {
+                CraftableComponent craftableComponent = item.getComponent(CraftableComponent.class);
+
+                try {
+                    List<SkyBlockRecipe<?>> recipes = craftableComponent.getRecipes();
+                    if (recipes != null && !recipes.isEmpty()) {
+                        recipes.forEach(SkyBlockRecipe::init);
+                        Logger.debug("Initialized " + recipes.size() + " recipe(s) for item: " + type.name());
+                    }
+                } catch (Exception e) {
+                    Logger.error(e, "Failed to initialize recipe for item type: {}", type.name());
+                }
+            }
+        });
+        CollectionCategories.getCategories().forEach(category -> {
+            Arrays.stream(category.getCollections()).forEach(collection -> {
+                List<SkyBlockRecipe<?>> recipes = new ArrayList<>();
+                Arrays.stream(collection.rewards()).forEach(reward -> {
+                    Arrays.stream(reward.unlocks()).forEach(unlock -> {
+                        if (unlock instanceof CollectionCategory.UnlockRecipe recipe) {
+                            try {
+                                List<SkyBlockRecipe<?>> recipeInstances = recipe.getRecipes();
+
+                                recipeInstances.forEach(recipeInstance -> {
+                                    recipeInstance.setCanCraft((player) -> {
+                                        int amount = player.getCollection().get(collection.type());
+                                        return new SkyBlockRecipe.CraftingResult(
+                                                amount >= reward.requirement(),
+                                                new String[]{"§7You must have §c" + collection.type().getDisplayName()
+                                                        + " Collection "
+                                                        + StringUtility.getAsRomanNumeral(collection.getPlacementOf(reward))}
+                                        );
+                                    });
+                                    recipes.add(recipeInstance);
+                                });
+                            } catch (Exception e) {
+                                Logger.error(e, "Failed to parse collection recipe for {} with requirement {}",
+                                        collection.type(), reward.requirement());
+                            }
+                        }
+                    });
+                });
+                recipes.forEach(SkyBlockRecipe::init);
+            });
+        });
 
         /**
          * Cache custom collections
@@ -424,55 +497,6 @@ public record SkyBlockGenericLoader(HypixelTypeLoader typeLoader) {
                         CustomLevelAward.addToCache(requirement.asInt(), award.getAward());
                     }
                 });
-            });
-        });
-
-        /**
-         * Load item recipes
-         */
-        Arrays.stream(ItemType.values()).forEach(type -> {
-            SkyBlockItem item = new SkyBlockItem(type);
-            if (item.hasComponent(CraftableComponent.class)) {
-                CraftableComponent craftableComponent = item.getComponent(CraftableComponent.class);
-                if (!craftableComponent.isDefaultCraftable()) return;
-
-                try {
-                    craftableComponent.getRecipes().forEach(SkyBlockRecipe::init);
-                } catch (Exception e) {
-                    Logger.error("Failed to initialize recipe for " + type.name());
-                    e.printStackTrace();
-                }
-            }
-        });
-        CollectionCategories.getCategories().forEach(category -> {
-            Arrays.stream(category.getCollections()).forEach(collection -> {
-                List<SkyBlockRecipe<?>> recipes = new ArrayList<>();
-                Arrays.stream(collection.rewards()).forEach(reward -> {
-                    Arrays.stream(reward.unlocks()).forEach(unlock -> {
-                        if (unlock instanceof CollectionCategory.UnlockRecipe recipe) {
-                            try {
-                                List<SkyBlockRecipe<?>> recipeInstances = recipe.getRecipes();
-
-                                recipeInstances.forEach(recipeInstance -> {
-                                    recipeInstance.setCanCraft((player) -> {
-                                        int amount = player.getCollection().get(collection.type());
-                                        return new SkyBlockRecipe.CraftingResult(
-                                                amount >= reward.requirement(),
-                                                new String[]{"§7You must have §c" + collection.type().getDisplayName()
-                                                        + " Collection "
-                                                        + StringUtility.getAsRomanNumeral(collection.getPlacementOf(reward))}
-                                        );
-                                    });
-                                    recipes.add(recipeInstance);
-                                });
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                Logger.error("Failed to parse recipe " + collection.type() + " : " + reward.requirement());
-                            }
-                        }
-                    });
-                });
-                recipes.forEach(SkyBlockRecipe::init);
             });
         });
 
@@ -556,5 +580,41 @@ public record SkyBlockGenericLoader(HypixelTypeLoader typeLoader) {
                     }
                 })
                 .filter(java.util.Objects::nonNull);
+    }
+
+    private void setBiome(int x, int y, int z, RegistryKey<Biome> biome) {
+        CompletableFuture<Chunk> chunk = HypixelConst.getInstanceContainer().loadChunk(CoordConversion.globalToChunk(x), CoordConversion.globalToChunk(z));
+		chunk.thenAccept((c) -> c.setBiome(x, y, z, biome));
+    }
+
+    private void setBiome(Pos start, Pos end, RegistryKey<Biome> biome) {
+        int minX = Math.min(start.blockX(), end.blockX());
+        int maxX = Math.max(start.blockX(), end.blockX());
+
+        int minY = Math.min(start.blockY(), end.blockY());
+        int maxY = Math.max(start.blockY(), end.blockY());
+
+        int minZ = Math.min(start.blockZ(), end.blockZ());
+        int maxZ = Math.max(start.blockZ(), end.blockZ());
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    setBiome(x, y, z, biome);
+                }
+            }
+        }
+    }
+
+    private static String formatEffectDuration(long durationMs) {
+        long totalSeconds = durationMs / 1000;
+        long minutes = totalSeconds / 60;
+        long seconds = totalSeconds % 60;
+
+        if (minutes > 0) {
+            return String.format("%d:%02d", minutes, seconds);
+        } else {
+            return seconds + "s";
+        }
     }
 }

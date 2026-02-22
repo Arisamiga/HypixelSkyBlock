@@ -4,15 +4,15 @@ plugins {
     java
     application
     `maven-publish`
-    id("io.github.goooler.shadow") version "8.1.7"
-    id("org.jetbrains.gradle.plugin.idea-ext") version "1.0.1"
+    id("com.gradleup.shadow") version "9.3.1"
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.3"
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
 }
 
@@ -28,19 +28,18 @@ dependencies {
     annotationProcessor("com.velocitypowered:velocity-api:3.4.0-SNAPSHOT")
     compileOnly(files("velocity-proxy-3.4.0-SNAPSHOT.jar"))
 
-    implementation("com.github.Swofty-Developments:AtlasRedisAPI:1.1.3")
-    // implementation("net.swofty:AtlasRedisAPI:1.1.4")
+    implementation("com.github.Swofty-Developments:AtlasRedisAPI:1.1.5")
     implementation(project(":commons"))
+    implementation(project(":proxy.api"))
+    implementation("org.mongodb:bson:5.6.2")
+    implementation("org.mongodb:mongodb-driver-sync:5.6.2")
 
-    implementation("org.mongodb:bson:4.11.2")
-    implementation("org.mongodb:mongodb-driver-sync:4.11.2")
+    implementation("com.viaversion:vialoader:4.0.6")
+    implementation("com.viaversion:viabackwards-common:5.7.0")
+    implementation("com.viaversion:viarewind-common:4.0.14")
+    implementation("com.viaversion:viaversion:5.7.0")
 
-    implementation("com.viaversion:vialoader:4.0.2")
-    implementation("com.viaversion:viabackwards-common:5.3.2")
-    implementation("com.viaversion:viarewind-common:4.0.7")
-    implementation("com.viaversion:viaversion:5.3.2")
-
-    implementation(platform("io.netty:netty-bom:4.1.110.Final"))
+    implementation(platform("io.netty:netty-bom:4.2.9.Final"))
     implementation("io.netty:netty-buffer")
     implementation("io.netty:netty-codec")
     implementation("io.netty:netty-codec-http")

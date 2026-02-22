@@ -39,13 +39,15 @@ public class PartyEventToServiceEndpoint implements ServiceEndpoint<
                 case PartyHijackRequestEvent hijackEvent -> PartyCache.handleHijackRequest(hijackEvent);
                 case PartyPlayerSwitchedServerEvent switchEvent -> PartyCache.handlePlayerSwitchedServer(switchEvent);
                 case PartyChatMessageEvent chatEvent -> PartyCache.handleChatMessage(chatEvent);
+                case PartyPlayerDisconnectEvent disconnectEvent -> PartyCache.handlePlayerDisconnect(disconnectEvent);
+                case PartyPlayerRejoinEvent rejoinEvent -> PartyCache.handlePlayerRejoin(rejoinEvent);
                 default -> Logger.warn("Unknown party event type: " + event.getClass().getSimpleName());
             }
 
             return new SendPartyEventToServiceProtocolObject.SendPartyEventToServiceResponse(true);
         } catch (Exception e) {
             System.out.println("Failed to process party event: " + e.getMessage());
-            e.printStackTrace();
+            Logger.error(e, "Failed to process party event in service endpoint");
             return new SendPartyEventToServiceProtocolObject.SendPartyEventToServiceResponse(false);
         }
     }

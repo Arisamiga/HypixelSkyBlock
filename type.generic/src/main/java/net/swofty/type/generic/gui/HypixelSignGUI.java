@@ -35,27 +35,29 @@ public class HypixelSignGUI {
                         .put("has_glowing_text", ByteBinaryTag.byteBinaryTag((byte) 0))
                         .put("color", StringBinaryTag.stringBinaryTag("black"))
                         .put("messages", ListBinaryTag.from(List.of(
-                                StringBinaryTag.stringBinaryTag("{\"text\":\"\"}"),
-                                StringBinaryTag.stringBinaryTag("{\"text\":\"\"}"),
-                                StringBinaryTag.stringBinaryTag("{\"text\":\"\"}"),
-                                StringBinaryTag.stringBinaryTag("{\"text\":\"\"}"))))
+                                StringBinaryTag.stringBinaryTag(""),
+                                StringBinaryTag.stringBinaryTag(""),
+                                StringBinaryTag.stringBinaryTag(""),
+                                StringBinaryTag.stringBinaryTag("")
+                        )))
                         .build())
                 .put("front_text", CompoundBinaryTag.builder()
                         .put("has_glowing_text", ByteBinaryTag.byteBinaryTag((byte) 0))
                         .put("color", StringBinaryTag.stringBinaryTag("black"))
                         .put("messages", ListBinaryTag.from(List.of(
-                                StringBinaryTag.stringBinaryTag("{\"text\":\"\"}"),
-                                StringBinaryTag.stringBinaryTag("{\"text\":\"^^^^^^^^\"}"),
-                                StringBinaryTag.stringBinaryTag("{\"text\":\"" + text[0] + "\"}"),
-                                StringBinaryTag.stringBinaryTag("{\"text\":\"" + text[1] + "\"}")))
-                        ).build())
+                                StringBinaryTag.stringBinaryTag(""),
+                                StringBinaryTag.stringBinaryTag("^^^^^^^^"),
+                                StringBinaryTag.stringBinaryTag(text[0]),
+                                StringBinaryTag.stringBinaryTag(text[1])
+                        )))
+                        .build())
                 .build();
 
-        player.sendPackets(
-                new BlockChangePacket(pos, Block.OAK_SIGN),
-                new BlockEntityDataPacket(pos, Block.OAK_SIGN.registry().blockEntityId(), compound)
-        );
-        MinecraftServer.getSchedulerManager().scheduleTask(() -> {
+		player.sendPackets(
+				new BlockChangePacket(pos, Block.OAK_SIGN),
+				new BlockEntityDataPacket(pos, Block.OAK_SIGN.registry().blockEntityType(), compound)
+		);
+		MinecraftServer.getSchedulerManager().scheduleTask(() -> {
             player.sendPacket(new OpenSignEditorPacket(pos, true));
         }, TaskSchedule.tick(2), TaskSchedule.stop());
 

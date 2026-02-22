@@ -1,15 +1,18 @@
 package net.swofty.type.hub.npcs;
 
 import net.minestom.server.coordinate.Pos;
-import net.swofty.type.generic.entity.npc.NPCDialogue;
-import net.swofty.type.generic.entity.npc.NPCParameters;
 import net.swofty.type.generic.user.HypixelPlayer;
+import net.swofty.type.generic.entity.npc.HypixelNPC;
+import net.swofty.type.generic.entity.npc.configuration.HumanConfiguration;
 import net.swofty.type.hub.gui.GUIShopAdventurer;
 import net.swofty.type.generic.data.datapoints.DatapointToggles;
 
-public class NPCAdventurer extends NPCDialogue {
+import net.swofty.type.generic.event.custom.NPCInteractEvent;
+import net.swofty.type.hub.gui.GUIShopLibrarian;
+
+public class NPCAdventurer extends HypixelNPC {
     public NPCAdventurer() {
-        super(new NPCParameters() {
+        super(new HumanConfiguration() {
             @Override
             public String[] holograms(HypixelPlayer player) {
                 return new String[]{"Adventurer", "§e§lCLICK"};
@@ -31,14 +34,14 @@ public class NPCAdventurer extends NPCDialogue {
             }
 
             @Override
-            public boolean looking() {
+            public boolean looking(HypixelPlayer player) {
                 return true;
             }
         });
     }
 
     @Override
-    public void onClick(PlayerClickNPCEvent e) {
+    public void onClick(NPCInteractEvent e) {
         HypixelPlayer player = e.player();
         if (isInDialogue(player)) return;
         boolean hasSpokenBefore = player.getToggles().get(DatapointToggles.Toggles.ToggleType.HAS_SPOKEN_TO_ADVENTURER);
@@ -50,13 +53,13 @@ public class NPCAdventurer extends NPCDialogue {
             return;
         }
 
-        new GUIShopAdventurer().open(player);
+        player.openView(new GUIShopAdventurer());
     }
 
     @Override
-    public NPCDialogue.DialogueSet[] getDialogueSets(HypixelPlayer player) {
-        return new NPCDialogue.DialogueSet[] {
-                NPCDialogue.DialogueSet.builder()
+    public DialogueSet[] dialogues(HypixelPlayer player) {
+        return new DialogueSet[] {
+                DialogueSet.builder()
                         .key("hello").lines(new String[]{
                                 "I've seen it all - every island from here to the edge of the world!",
                                 "Over the years I've acquired a variety of Talismans and Artifact.",

@@ -2,8 +2,8 @@ package net.swofty.type.skyblockgeneric.commands;
 
 import net.minestom.server.command.builder.arguments.ArgumentStringArray;
 import net.minestom.server.command.builder.arguments.number.ArgumentInteger;
-import net.swofty.commons.Configuration;
-import net.swofty.commons.item.ItemType;
+import net.swofty.commons.config.ConfigProvider;
+import net.swofty.commons.skyblock.item.ItemType;
 import net.swofty.type.generic.command.CommandParameters;
 import net.swofty.type.generic.command.HypixelCommand;
 import net.swofty.type.skyblockgeneric.item.SkyBlockItem;
@@ -24,7 +24,7 @@ public class SetItemLoreCommand extends HypixelCommand {
 
         command.addSyntax((sender, context) -> {
             if (!permissionCheck(sender)) return;
-            if (Configuration.get("sandbox-mode").equals("false")) {
+            if (!ConfigProvider.settings().isSandbox()) {
                 sender.sendMessage("§cThis command is disabled on this server.");
                 return;
             }

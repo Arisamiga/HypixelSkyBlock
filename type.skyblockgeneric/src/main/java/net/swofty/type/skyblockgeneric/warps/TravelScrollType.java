@@ -4,6 +4,7 @@ import lombok.Getter;
 import net.minestom.server.coordinate.Pos;
 import net.swofty.type.generic.user.categories.Rank;
 import net.swofty.type.skyblockgeneric.warps.unlocks.ScrollUnlockCustomRecipe;
+import net.swofty.type.skyblockgeneric.warps.unlocks.ScrollUnlockDarkAuction;
 import net.swofty.type.skyblockgeneric.warps.unlocks.ScrollUnlockPurchase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,12 +23,24 @@ public enum TravelScrollType {
             new ScrollUnlockCustomRecipe("Unlock this scroll's recipe through Museum Rewards."),
             new Pos(-76.5, 76, 80, -90, 0),
             Rank.DEFAULT),
+    HUB_DARK_AUCTION("da", "§bHub §7- §5Dark Auction",
+            "Spawn in front of §5Sirius§7, the Dark Auction master.",
+            "67ae3e2539a442518130370d3b2d3b1837a491ee23d5aff20f015ae284a28c90",
+            new ScrollUnlockDarkAuction(),
+            new Pos(93.2, 75, 172.8, 22, 0),
+            Rank.DEFAULT),
     HUB_CRYPTS("crypts", "§bHub §7- §bCrypts",
             "Spawn in the §6crypts §7below the §cgraveyard §7in the hub.",
             "f4559d75464b2e40a518e4de8e6cf3085f0a3ca0b1b7012614c4cd96fed60378",
             new ScrollUnlockCustomRecipe("Unlock this scroll's recipe through Recipe Unlock."),
             new Pos(-190, 74, -89, -90, 0),
             Rank.MVP_PLUS),
+    THE_PARK("park", "§aForaging §7- §aTravel Scroll I",
+            "Spawn in the Birch Park",
+            "a221f813dacee0fef8c59f76894dbb26415478d9ddfc44c2e708a6d3b7549b",
+            new ScrollUnlockCustomRecipe("Unlock this scroll's recipe through Foraging Skill Rewards."),
+            new Pos(200, 70, 200, 0, 0),
+            Rank.DEFAULT)
     ;
 
     private final @NotNull String internalName;

@@ -1,7 +1,7 @@
 package net.swofty.type.skyblockgeneric.collection;
 
 import lombok.Getter;
-import net.swofty.commons.item.ItemType;
+import net.swofty.commons.skyblock.item.ItemType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +21,23 @@ public enum CustomCollectionAward {
     SHARPNESS_DISCOUNT("§9Sharpness §7Exp Discount §a(-25%)"),
     SMITE_DISCOUNT("§9Smite §7Exp Discount §a(-25%)"),
     ENDER_SLAYER_DISCOUNT("§9Ender Slayer §7Exp Discount §a(-25%)"),
+    GIANT_KILLER_DISCOUNT("§9Giant Killer §7Exp Discount §a(-25%)"),
+    EXECUTE_DISCOUNT("§9Execute §7Exp Discount §a(-25%)"),
+    IMPALING_DISCOUNT("§9Impaling §7Exp Discount §a(-25%)"),
+    BANE_OF_ARTHROPODS_DISCOUNT("§9Bane of Arthropods §7Exp Discount §a(-25%)"),
+    CUBISM_DISCOUNT("§9Cubism §7Exp Discount §a(-25%)"),
+    FORTUNE_DISCOUNT("§9Fortune §7Exp Discount §a(-25%)"),
+    CLEAVE_DISCOUNT("§9Cleave §7Exp Discount §a(-25%)"),
+    LIFE_STEAL_DISCOUNT("§9Life Steal §7Exp Discount §a(-25%)"),
+    PROSECUTE_DISCOUNT("§9Prosecute §7Exp Discount §a(-25%)"),
+    THUNDERBOLT_DISCOUNT("§9Thunderbolt §7Exp Discount §a(-25%)"),
+    EXPERIENCE_DISCOUNT("§9Experience §7Exp Discount §a(-25%)"),
+    FIRE_ASPECT_DISCOUNT("§9Fire Aspect §7Exp Discount §a(-25%)"),
+    KNOCKBACK_DISCOUNT("§9Knockback §7Exp Discount §a(-25%)"),
+    LETHALITY_DISCOUNT("§9Lethality §7Exp Discount §a(-25%)"),
+    THUNDERLORD_DISCOUNT("§9Thunderlord §7Exp Discount §a(-25%)"),
+    VAMPIRISM_DISCOUNT("§9Vampirism §7Exp Discount §a(-25%)"),
+    VENOMOUS_DISCOUNT("§9Venomous §7Exp Discount §a(-25%)"),
 
     // BAGS
     QUIVER("§aQuiver"),

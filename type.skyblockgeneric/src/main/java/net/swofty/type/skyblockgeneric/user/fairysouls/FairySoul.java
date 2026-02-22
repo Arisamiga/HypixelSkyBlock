@@ -51,12 +51,11 @@ public class FairySoul {
             player.getSkyblockDataHandler()
                     .get(SkyBlockDataHandler.Data.FAIRY_SOULS, DatapointFairySouls.class)
                     .setValue(fairySouls);
+            player.getAchievementHandler().addProgressByTrigger("skyblock.fairy_soul_found", 1);
             return;
         }
 
         player.sendMessage("§dYou have already found that Fairy Soul!");
-        if (!fairySouls.getExchangedFairySouls().contains(id))
-            player.sendMessage("§7Go to Tia the Fairy in the §eHub§7 to exchange it for rewards!");
     }
 
     public static List<FairySoul> getFairySouls() {

@@ -6,11 +6,11 @@ import net.kyori.adventure.sound.Sound;
 import net.minestom.server.particle.Particle;
 import net.swofty.commons.ChatColor;
 import net.swofty.commons.StringUtility;
-import net.swofty.commons.item.ItemType;
-import net.swofty.commons.item.Rarity;
-import net.swofty.commons.item.attribute.attributes.ItemAttributePetData;
-import net.swofty.commons.statistics.ItemStatistic;
-import net.swofty.commons.statistics.ItemStatistics;
+import net.swofty.commons.skyblock.item.ItemType;
+import net.swofty.commons.skyblock.item.Rarity;
+import net.swofty.commons.skyblock.item.attribute.attributes.ItemAttributePetData;
+import net.swofty.commons.skyblock.statistics.ItemStatistic;
+import net.swofty.commons.skyblock.statistics.ItemStatistics;
 import net.swofty.type.skyblockgeneric.data.datapoints.DatapointPetData;
 import net.swofty.type.skyblockgeneric.item.SkyBlockItem;
 import net.swofty.type.skyblockgeneric.item.SkyBlockItemComponent;
@@ -97,10 +97,10 @@ public class PetComponent extends SkyBlockItemComponent {
 
         addPropertyInt("Magic Find", (baseStatistics.getOverall(ItemStatistic.MAGIC_FIND) +
                 getPerLevelStatistics(rarity).getOverall(ItemStatistic.MAGIC_FIND) * 100.0 * level), lore);
-        addPropertyPercent("Crit Damage", (baseStatistics.getOverall(ItemStatistic.CRIT_DAMAGE) +
-                getPerLevelStatistics(rarity).getOverall(ItemStatistic.CRIT_DAMAGE) * level), lore);
-        addPropertyPercent("Crit Chance", (baseStatistics.getOverall(ItemStatistic.CRIT_CHANCE) +
-                getPerLevelStatistics(rarity).getOverall(ItemStatistic.CRIT_CHANCE) * level), lore);
+        addPropertyPercent("Crit Damage", (baseStatistics.getOverall(ItemStatistic.CRITICAL_DAMAGE) +
+                getPerLevelStatistics(rarity).getOverall(ItemStatistic.CRITICAL_DAMAGE) * level), lore);
+        addPropertyPercent("Crit Chance", (baseStatistics.getOverall(ItemStatistic.CRITICAL_CHANCE) +
+                getPerLevelStatistics(rarity).getOverall(ItemStatistic.CRITICAL_CHANCE) * level), lore);
         addPropertyPercent("Health", (baseStatistics.getOverall(ItemStatistic.HEALTH) +
                 getPerLevelStatistics(rarity).getOverall(ItemStatistic.HEALTH) * level), lore);
         addPropertyInt("Strength", baseStatistics.getOverall(ItemStatistic.STRENGTH) +

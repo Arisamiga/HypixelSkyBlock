@@ -2,7 +2,7 @@ package net.swofty.type.skyblockgeneric.minion;
 
 import lombok.Getter;
 import net.swofty.commons.StringUtility;
-import net.swofty.commons.item.ItemType;
+import net.swofty.commons.skyblock.item.ItemType;
 import net.swofty.type.skyblockgeneric.minion.minions.combat.*;
 import net.swofty.type.skyblockgeneric.minion.minions.farming.*;
 import net.swofty.type.skyblockgeneric.minion.minions.fishing.MinionClay;
@@ -20,7 +20,7 @@ public enum MinionRegistry {
     GOLD(MinionGold.class, ItemType.GOLD_MINION),
     LAPIS(MinionLapis.class, ItemType.LAPIS_MINION),
     IRON(MinionIron.class, ItemType.IRON_MINION),
-    ENDSTONE(MinionEndstone.class, ItemType.ENDSTONE_MINION),
+    ENDSTONE(MinionEndstone.class, ItemType.END_STONE_MINION),
     REDSTONE(MinionRedstone.class, ItemType.REDSTONE_MINION),
     EMERALD(MinionEmerald.class, ItemType.EMERALD_MINION),
     ICE(MinionIce.class, ItemType.ICE_MINION),

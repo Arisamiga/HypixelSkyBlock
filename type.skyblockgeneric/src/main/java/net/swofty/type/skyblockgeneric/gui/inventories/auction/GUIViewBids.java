@@ -1,6 +1,7 @@
 package net.swofty.type.skyblockgeneric.gui.inventories.auction;
 
 import net.minestom.server.component.DataComponents;
+import org.tinylog.Logger;
 import net.minestom.server.event.inventory.InventoryCloseEvent;
 import net.minestom.server.event.inventory.InventoryPreClickEvent;
 import net.minestom.server.inventory.Inventory;
@@ -9,7 +10,7 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.swofty.commons.ServiceType;
 import net.swofty.commons.StringUtility;
-import net.swofty.commons.auctions.AuctionItem;
+import net.swofty.commons.skyblock.auctions.AuctionItem;
 import net.swofty.commons.protocol.objects.auctions.AuctionFetchItemProtocolObject;
 import net.swofty.proxyapi.ProxyService;
 import net.swofty.type.generic.gui.inventory.HypixelInventoryGUI;
@@ -59,7 +60,7 @@ public class GUIViewBids extends HypixelInventoryGUI implements RefreshingGUI {
                     auctionItems.add(item);
                 }
             }).exceptionally(ex -> {
-                ex.printStackTrace();
+                Logger.error(ex, "Failed to process auction bid");
                 return null;
             });
             futures.add(future);

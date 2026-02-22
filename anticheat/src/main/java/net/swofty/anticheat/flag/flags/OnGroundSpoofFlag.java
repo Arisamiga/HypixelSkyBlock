@@ -9,11 +9,7 @@ import net.swofty.anticheat.math.Vel;
 public class OnGroundSpoofFlag extends Flag {
     @ListenerMethod
     public void onPlayerPositionUpdate(PlayerPositionUpdateEvent event) {
-        boolean packetOnGround = event.getCurrentTick().isOnGround();
-        boolean trueOnGround = false;
-
-        Vel currentTicks = event.getCurrentTick().getVel();
-
-        Pos currentPosition = event.getCurrentTick().getPos();
+        // Disabled: heuristic-based detection has too many false positives
+        // Needs actual collision checking against world blocks to be accurate
     }
 }

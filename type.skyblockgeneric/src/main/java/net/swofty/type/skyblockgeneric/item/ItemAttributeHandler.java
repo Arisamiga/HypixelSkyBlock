@@ -2,14 +2,17 @@ package net.swofty.type.skyblockgeneric.item;
 
 import net.minestom.server.color.Color;
 import net.swofty.commons.ServiceType;
-import net.swofty.commons.item.ItemType;
-import net.swofty.commons.item.Rarity;
-import net.swofty.commons.item.attribute.attributes.*;
-import net.swofty.commons.item.reforge.Reforge;
-import net.swofty.commons.item.reforge.ReforgeLoader;
+import net.swofty.commons.skyblock.item.ItemType;
+import net.swofty.commons.skyblock.item.Rarity;
+import net.swofty.commons.skyblock.item.attribute.attributes.*;
+import net.swofty.commons.skyblock.item.attribute.attributes.ItemAttributeExtraDynamicStatistics;
+import net.swofty.commons.skyblock.item.reforge.Reforge;
+import net.swofty.commons.skyblock.item.reforge.ReforgeLoader;
 import net.swofty.commons.protocol.objects.itemtracker.TrackedItemUpdateProtocolObject;
-import net.swofty.commons.statistics.ItemStatistics;
+import net.swofty.commons.skyblock.statistics.ItemStatistics;
 import net.swofty.proxyapi.ProxyService;
+import net.swofty.type.skyblockgeneric.abiphone.AbiphoneNPC;
+import net.swofty.type.skyblockgeneric.abiphone.AbiphoneRegistry;
 import net.swofty.type.skyblockgeneric.enchantment.EnchantmentType;
 import net.swofty.type.skyblockgeneric.enchantment.SkyBlockEnchantment;
 import net.swofty.type.skyblockgeneric.item.components.*;
@@ -17,6 +20,9 @@ import net.swofty.type.skyblockgeneric.minion.MinionRegistry;
 import net.swofty.type.skyblockgeneric.user.SkyBlockPlayer;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -85,10 +91,32 @@ public class ItemAttributeHandler {
     }
 
     public Color getLeatherColour() {
+        // Check for dynamically applied dye color first
+        String dyeColor = getDyeColor();
+        if (dyeColor != null) {
+            return parseHexColor(dyeColor);
+        }
+        // Fall back to component-defined color
         if (item.hasComponent(LeatherColorComponent.class)) {
             return item.getComponent(LeatherColorComponent.class).getColor();
         }
         return null;
+    }
+
+    public @Nullable String getDyeColor() {
+        return ((ItemAttributeDyeColor) item.getAttribute("dye_color")).getValue();
+    }
+
+    public void setDyeColor(String hexColor) {
+        item.getAttribute("dye_color").setValue(hexColor);
+    }
+
+    private Color parseHexColor(String hex) {
+        hex = hex.replace("#", "");
+        int r = Integer.parseInt(hex.substring(0, 2), 16);
+        int g = Integer.parseInt(hex.substring(2, 4), 16);
+        int b = Integer.parseInt(hex.substring(4, 6), 16);
+        return new Color(r, g, b);
     }
 
     public void setSoulBound(boolean coopAllowed) {
@@ -275,12 +303,33 @@ public class ItemAttributeHandler {
                 .addEnchantment(enchantment.toUnderstandable());
     }
 
-    public ItemStatistics getStatistics() {
+    /**
+     * Gets the base statistics from the item's configuration.
+     * This does NOT include extra dynamic statistics like Greed bonus.
+     */
+    public ItemStatistics getBaseStatistics() {
         return ((ItemAttributeStatistics) item.getAttribute("statistics")).getValue().clone();
     }
 
-    public void setStatistics(ItemStatistics statistics) {
-        ((ItemAttributeStatistics) item.getAttribute("statistics")).setValue(statistics);
+    /**
+     * Gets the combined statistics (base + extra dynamic).
+     * This is what should be used when calculating item stats for display/combat.
+     */
+    public ItemStatistics getStatistics() {
+        ItemStatistics baseStats = getBaseStatistics();
+        ItemStatistics extraStats = getExtraDynamicStatistics();
+        return ItemStatistics.add(baseStats, extraStats);
+    }
+
+    /**
+     * Gets extra dynamic statistics that are added on top of base stats.
+     */
+    public ItemStatistics getExtraDynamicStatistics() {
+        return ((ItemAttributeExtraDynamicStatistics) item.getAttribute("extra_dynamic_statistics")).getValue();
+    }
+
+    public void setExtraDynamicStatistics(ItemStatistics statistics) {
+        ((ItemAttributeExtraDynamicStatistics) item.getAttribute("extra_dynamic_statistics")).setValue(statistics);
     }
 
     public void setRecombobulated(boolean value) {
@@ -315,11 +364,81 @@ public class ItemAttributeHandler {
         ((ItemAttributeBreakingPower) item.getAttribute("breaking-power")).setValue(breakingPower);
     }
 
+    public int getNewYearCakeYear() {
+        return ((ItemAttributeNewYearCakeYear) item.getAttribute("new-year-cake-year")).getValue();
+    }
+
+    public void setNewYearCakeYear(int year) {
+        ((ItemAttributeNewYearCakeYear) item.getAttribute("new-year-cake-year")).setValue(year);
+    }
+
     public boolean isMiningTool() {
         return getBreakingPower() != 0;
     }
 
+    public long getDarkAuctionPrice() {
+        return ((ItemAttributeDarkAuctionPrice) item.getAttribute("dark_auction_price")).getValue();
+    }
+
+    public void setDarkAuctionPrice(long price) {
+        ((ItemAttributeDarkAuctionPrice) item.getAttribute("dark_auction_price")).setValue(price);
+    }
+
+    public List<AbiphoneNPC> getAbiphoneNPCs() {
+        return ((ItemAttributeAbiphoneContacts) item.getAttribute("abiphone_contacts")).getValue().stream()
+                .map(AbiphoneRegistry::getFromId)
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    public void setAbiphoneNPCs(List<AbiphoneNPC> npcs) {
+        List<String> ids = npcs.stream()
+                .map(AbiphoneNPC::getId)
+                .toList();
+        ((ItemAttributeAbiphoneContacts) item.getAttribute("abiphone_contacts")).setValue(ids);
+    }
+
+    public void addAbiphoneNPC(AbiphoneNPC npc) {
+        ItemAttributeAbiphoneContacts attribute = (ItemAttributeAbiphoneContacts) item.getAttribute("abiphone_contacts");
+        List<String> ids = new ArrayList<>(attribute.getValue());
+        if (!ids.contains(npc.getId())) {
+            ids.add(npc.getId());
+            attribute.setValue(ids);
+        }
+    }
+
+    public void removeAbiphoneNPC(AbiphoneNPC npc) {
+        ItemAttributeAbiphoneContacts attribute = (ItemAttributeAbiphoneContacts) item.getAttribute("abiphone_contacts");
+        List<String> ids = new ArrayList<>(attribute.getValue());
+        if (ids.contains(npc.getId())) {
+            ids.remove(npc.getId());
+            attribute.setValue(ids);
+        }
+    }
+
+    public boolean hasAbiphoneNPC(AbiphoneNPC npc) {
+        ItemAttributeAbiphoneContacts attribute = (ItemAttributeAbiphoneContacts) item.getAttribute("abiphone_contacts");
+        List<String> ids = attribute.getValue();
+        return ids.contains(npc.getId());
+    }
+
+    public void setStoredPotential(int storedPotential) {
+        ((ItemAttributeStoredPotential) item.getAttribute("stored_potential")).setValue(storedPotential);
+    }
+
+    public int getStoredPotential() {
+        return ((ItemAttributeStoredPotential) item.getAttribute("stored_potential")).getValue();
+    }
+
     public SkyBlockItem asSkyBlockItem() {
         return item;
+    }
+
+    public @Nullable ItemAttributePotionData.PotionData getPotionData() {
+        return ((ItemAttributePotionData) item.getAttribute("potion_data")).getValue();
+    }
+
+    public void setPotionData(ItemAttributePotionData.PotionData data) {
+        ((ItemAttributePotionData) item.getAttribute("potion_data")).setValue(data);
     }
 }

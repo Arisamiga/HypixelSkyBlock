@@ -1,6 +1,6 @@
 package net.swofty.type.generic.data;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import io.sentry.Sentry;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
@@ -9,6 +9,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.scoreboard.Team;
 import net.minestom.server.scoreboard.TeamBuilder;
 import net.swofty.commons.StringUtility;
+import net.swofty.type.generic.HypixelConst;
 import net.swofty.type.generic.data.datapoints.*;
 import net.swofty.type.generic.data.mongodb.ProfilesDatabase;
 import net.swofty.type.generic.data.mongodb.UserDatabase;
@@ -19,6 +20,7 @@ import org.bson.Document;
 import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
+import tools.jackson.core.JacksonException;
 
 import java.util.UUID;
 import java.util.function.BiConsumer;
@@ -46,7 +48,7 @@ public class HypixelDataHandler extends DataHandler {
         for (Data data : Data.values()) {
             String key = data.getKey();
             if (!document.containsKey(key)) {
-                this.datapoints.put(key, data.getDefaultDatapoint().setUser(this).setData(data));
+                this.datapoints.put(key, data.getDefaultDatapoint().deepClone().setUser(this).setData(data));
                 continue;
             }
             String jsonValue = document.getString(key);
@@ -56,9 +58,9 @@ public class HypixelDataHandler extends DataHandler {
                 dp.deserializeValue(jsonValue);
                 this.datapoints.put(key, dp.setUser(this).setData(data));
             } catch (Exception e) {
-                this.datapoints.put(key, data.getDefaultDatapoint().setUser(this).setData(data));
-                Logger.info("Issue with datapoint " + key + " for user " + this.uuid + " - defaulting");
-                e.printStackTrace();
+                this.datapoints.put(key, data.getDefaultDatapoint().deepClone().setUser(this).setData(data));
+                Logger.error(e, "Issue with datapoint {} for user {} - defaulting to default value", key, this.uuid);
+                Sentry.captureException(e);
             }
         }
         return this;
@@ -76,8 +78,8 @@ public class HypixelDataHandler extends DataHandler {
         for (Data data : Data.values()) {
             try {
                 document.put(data.getKey(), getDatapoint(data.getKey()).getSerializedValue());
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
+            } catch (JacksonException e) {
+                Logger.error(e, "Failed to serialize datapoint {} for user {}", data.getKey(), this.uuid);
             }
         }
         return document;
@@ -110,8 +112,10 @@ public class HypixelDataHandler extends DataHandler {
         for (Data data : Data.values()) {
             if (data.onQuit != null) {
                 Datapoint<?> produced = data.onQuit.apply(player);
-                Datapoint<?> target = get(data);
-                target.setFrom(produced); // no onChange during save
+                if (produced != null) {
+                    Datapoint<?> target = get(data);
+                    target.setFrom(produced); // no onChange during save
+                }
             }
         }
     }
@@ -126,8 +130,7 @@ public class HypixelDataHandler extends DataHandler {
                         data.getDefaultDatapoint().deepClone().setUser(h).setData(data)
                 );
             } catch (Exception e) {
-                Logger.error("Issue with datapoint " + data.getKey() + " for user " + uuid + " - fix");
-                e.printStackTrace();
+                Logger.error(e, "Issue with datapoint {} for user {} - requires fixing", data.getKey(), uuid);
             }
         }
         return h;
@@ -137,8 +140,8 @@ public class HypixelDataHandler extends DataHandler {
         if (userCache.containsKey(uuid))
             return (HypixelDataHandler) userCache.get(uuid);
 
-        ProfilesDatabase profilesDatabase = new ProfilesDatabase(uuid.toString());
-        Document doc = profilesDatabase.getDocument();
+        UserDatabase userDatabase = new UserDatabase(uuid.toString());
+        Document doc = userDatabase.getHypixelData();
         return createFromDocument(doc);
     }
 
@@ -151,8 +154,12 @@ public class HypixelDataHandler extends DataHandler {
         return handler.get(Data.IGN, DatapointString.class).getValue();
     }
 
+    @Blocking
     public static @Nullable UUID getPotentialUUIDFromName(String name) throws RuntimeException {
-        Document doc = UserDatabase.collection.find(new Document("ignLowercase", "\"" + name.toLowerCase() + "\"")).first();
+        Document doc = UserDatabase.collection.find(
+                new Document("ignLowercase", "\"" + name.toLowerCase() + "\"")
+        ).first();
+
         if (doc == null)
             return null;
         return UUID.fromString(doc.getString("_id"));
@@ -169,9 +176,10 @@ public class HypixelDataHandler extends DataHandler {
             // Delay this as player needs to be loaded
             MathUtility.delay(() -> {
                 if (!player.isOnline()) return;
+                if (HypixelConst.getTypeLoader().getType().isSkyBlock()) return;
 
-                String teamName = StringUtility.limitStringLength(rank.getPriorityCharacter() + "_" + player.getUsername(), 16);
-                Team team = new TeamBuilder("ZZZZZ" + teamName, MinecraftServer.getTeamManager())
+                String teamName = StringUtility.limitStringLength(rank.getPriorityCharacter() + player.getUsername(), 15);
+                Team team = new TeamBuilder("Z" + teamName, MinecraftServer.getTeamManager())
                         .prefix(Component.text(rank.getPrefix()))
                         .teamColor(rank.getTextColor())
                         .build();
@@ -180,8 +188,11 @@ public class HypixelDataHandler extends DataHandler {
             }, 5);
         }, (player, datapoint) -> {
             player.sendPacket(MinecraftServer.getCommandManager().createDeclareCommandsPacket(player));
+            if (HypixelConst.getTypeLoader().getType().isSkyBlock()) return;
+
             Rank rank = (Rank) datapoint.getValue();
-            player.setTeam(new TeamBuilder("ZZZZZ" + rank.getPriorityCharacter() + "_" + player.getUsername(), MinecraftServer.getTeamManager())
+            String teamName = StringUtility.limitStringLength(rank.getPriorityCharacter() + player.getUsername(), 15);
+            player.setTeam(new TeamBuilder("Z" + teamName, MinecraftServer.getTeamManager())
                     .prefix(Component.text(rank.getPrefix()))
                     .teamColor(rank.getTextColor())
                     .build());
@@ -200,9 +211,28 @@ public class HypixelDataHandler extends DataHandler {
         TOGGLES("toggles", DatapointToggles.class, new DatapointToggles("toggles")),
 
         GAMEMODE("gamemode", DatapointGamemode.class, new DatapointGamemode("gamemode", GameMode.SURVIVAL),
-                (player, datapoint) -> player.setGameMode((GameMode) datapoint.getValue()),
-                (player, datapoint) -> player.setGameMode((GameMode) datapoint.getValue()),
-                (player) -> new DatapointGamemode("gamemode", player.getGameMode())),
+                (player, datapoint) -> {
+                    if (HypixelConst.getTypeLoader().getType().isSkyBlock()) {
+                        player.setGameMode((GameMode) datapoint.getValue());
+                    }
+                },
+                (player, datapoint) -> {
+                    if (HypixelConst.getTypeLoader().getType().isSkyBlock()) {
+                        // Reset to SURVIVAL if coming from non-SkyBlock server
+                        HypixelPlayer hypixelPlayer = (HypixelPlayer) player;
+                        if (hypixelPlayer.getOriginServer() == null || !hypixelPlayer.getOriginServer().isSkyBlock()) {
+                            player.setGameMode(GameMode.SURVIVAL);
+                        } else {
+                            player.setGameMode((GameMode) datapoint.getValue());
+                        }
+                    }
+                },
+                (player) -> {
+                    if (HypixelConst.getTypeLoader().getType().isSkyBlock()) {
+                        return new DatapointGamemode("gamemode", player.getGameMode());
+                    }
+                    return null; // Don't update gamemode for non-SkyBlock servers
+                }),
 
         SKIN_SIGNATURE("skin_signature",
                 DatapointString.class, new DatapointString("skin_signature", "null"),
@@ -213,6 +243,21 @@ public class HypixelDataHandler extends DataHandler {
                 DatapointString.class, new DatapointString("skin_texture", "null"),
                 (player, datapoint) -> {},
                 (player, datapoint) -> ((DatapointString) datapoint).setValue(player.getSkin().textures())),
+
+        HYPIXEL_EXPERIENCE("hypixel_experience",
+                DatapointHypixelExperience.class, new DatapointHypixelExperience("hypixel_experience", 0L)),
+
+        ACHIEVEMENT_DATA("achievement_data",
+                DatapointAchievementData.class, new DatapointAchievementData("achievement_data")),
+
+        QUEST_DATA("quest_data",
+                DatapointQuestData.class, new DatapointQuestData("quest_data")),
+
+        PARKOUR_DATA("parkour_data", DatapointParkourData.class, new DatapointParkourData("parkour_data")),
+
+        FRIEND_SORT("friend_sort", DatapointFriendSort.class,
+                new DatapointFriendSort("friend_sort",
+                        new DatapointFriendSort.FriendSortData(DatapointFriendSort.SortType.DEFAULT, false)))
         ;
 
         @Getter private final String key;

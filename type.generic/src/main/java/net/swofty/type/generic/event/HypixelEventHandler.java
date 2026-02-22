@@ -42,10 +42,10 @@ public class HypixelEventHandler {
 
                 if (paramNode == EventNodes.CUSTOM) {
                     if (cachedCustomEvents.contains(new EventMethodEntry(method, instance, hypixelEvent))) {
-                        return;
+                        continue;
                     }
                     cachedCustomEvents.add(new EventMethodEntry(method, instance, hypixelEvent));
-                    return;
+                    continue;
                 }
 
                 if (!cachedEvents.containsKey(method.getParameterTypes()[0])) {
@@ -68,8 +68,7 @@ public class HypixelEventHandler {
                     }
                 });
             } catch (Exception e) {
-                Logger.error("Error occurred while registering custom event " + skyBlockEvent.getClass().getSimpleName());
-                e.printStackTrace();
+                Logger.error(e, "Error occurred while registering custom event: {}", skyBlockEvent.getClass().getSimpleName());
             }
         });
 
@@ -107,10 +106,9 @@ public class HypixelEventHandler {
                         try {
                             runEvent(eventMethod.hypixelEvent(), eventMethod.method, eventMethod.instance, concreteEvent);
                         } catch (Exception ex) {
-                            Logger.info("Exception occurred while running event " +
-                                    eventMethod.method.getClass().getSimpleName() + " with event type " +
+                            Logger.error(ex, "Exception occurred while running event {} with event type {}",
+                                    eventMethod.method.getClass().getSimpleName(),
                                     concreteEvent.getClass().getSimpleName());
-                            ex.printStackTrace();
                         }
                     }
                 });
@@ -166,7 +164,12 @@ public class HypixelEventHandler {
     public static void callCustomEvent(Event event) {
         if (customEventNode != null) {
             if (event instanceof PlayerEvent playerEvent) {
-                if (HypixelDataHandler.getUser(playerEvent.getPlayer()) == null) return;
+                if (HypixelDataHandler.getUser(playerEvent.getPlayer()) == null) {
+                    Logger.warn("Tried to call custom event {} for player {} but their data is not loaded.",
+                            event.getClass().getSimpleName(),
+                            playerEvent.getPlayer().getUsername());
+                    return;
+                }
             }
             customEventNode.call(event);
         }

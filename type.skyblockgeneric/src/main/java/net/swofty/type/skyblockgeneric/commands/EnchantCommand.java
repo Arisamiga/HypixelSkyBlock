@@ -14,8 +14,8 @@ import net.swofty.type.generic.user.categories.Rank;
 
 @CommandParameters(aliases = "ench",
         description = "Enchants the contents o the players hand",
-        usage = "/enchant",
-        permission = Rank.ADMIN,
+        usage = "/enchant <enchantment_type> <level>",
+        permission = Rank.STAFF,
         allowsConsole = false)
 public class EnchantCommand extends HypixelCommand {
     @Override

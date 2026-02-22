@@ -1,7 +1,7 @@
 package net.swofty.type.skyblockgeneric.commands;
 
 import net.minestom.server.command.builder.arguments.ArgumentEnum;
-import net.swofty.commons.item.ItemType;
+import net.swofty.commons.skyblock.item.ItemType;
 import net.swofty.type.generic.command.CommandParameters;
 import net.swofty.type.generic.command.HypixelCommand;
 import net.swofty.type.skyblockgeneric.data.monogdb.CrystalDatabase;
@@ -15,7 +15,7 @@ import net.swofty.type.generic.user.categories.Rank;
 @CommandParameters(aliases = "spawncrystal",
         description = "Spawns in a crystal at the player's location.",
         usage = "/addcrystal",
-        permission = Rank.ADMIN,
+        permission = Rank.STAFF,
         allowsConsole = false)
 public class AddCrystalCommand extends HypixelCommand {
     @Override

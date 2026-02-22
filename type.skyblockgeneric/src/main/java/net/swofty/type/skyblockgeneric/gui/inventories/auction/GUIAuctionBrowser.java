@@ -9,15 +9,15 @@ import net.minestom.server.event.inventory.InventoryCloseEvent;
 import net.minestom.server.event.inventory.InventoryPreClickEvent;
 import net.minestom.server.inventory.Inventory;
 import net.minestom.server.inventory.InventoryType;
-import net.minestom.server.inventory.click.ClickType;
+import net.minestom.server.inventory.click.Click;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.swofty.commons.ServiceType;
 import net.swofty.commons.StringUtility;
-import net.swofty.commons.auctions.AuctionCategories;
-import net.swofty.commons.auctions.AuctionItem;
-import net.swofty.commons.auctions.AuctionsFilter;
-import net.swofty.commons.auctions.AuctionsSorting;
+import net.swofty.commons.skyblock.auctions.AuctionCategories;
+import net.swofty.commons.skyblock.auctions.AuctionItem;
+import net.swofty.commons.skyblock.auctions.AuctionsFilter;
+import net.swofty.commons.skyblock.auctions.AuctionsSorting;
 import net.swofty.commons.protocol.objects.auctions.AuctionFetchItemsProtocolObject;
 import net.swofty.proxyapi.ProxyService;
 import net.swofty.type.generic.gui.inventory.HypixelInventoryGUI;
@@ -136,8 +136,7 @@ public class GUIAuctionBrowser extends HypixelInventoryGUI implements Refreshing
         set(new GUIClickableItem(52) {
             @Override
             public void run(InventoryPreClickEvent e, HypixelPlayer p) {
-                SkyBlockPlayer player = (SkyBlockPlayer) p;
-                if (e.getClick().equals(ClickType.RIGHT_CLICK)) {
+                if (e.getClick() instanceof Click.Right) {
                     AuctionsFilter nextFilter = filter.previous();
                     setFilter(nextFilter);
 

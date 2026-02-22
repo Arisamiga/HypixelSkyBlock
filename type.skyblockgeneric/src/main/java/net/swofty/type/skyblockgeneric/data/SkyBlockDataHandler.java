@@ -1,18 +1,16 @@
 package net.swofty.type.skyblockgeneric.data;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.timer.TaskSchedule;
-import net.swofty.commons.PlayerShopData;
-import net.swofty.commons.SkyBlockPlayerProfiles;
-import net.swofty.commons.item.ItemType;
+import net.swofty.commons.skyblock.PlayerShopData;
+import net.swofty.commons.skyblock.SkyBlockPlayerProfiles;
+import net.swofty.commons.skyblock.item.ItemType;
 import net.swofty.type.generic.data.DataHandler;
 import net.swofty.type.generic.data.Datapoint;
-import net.swofty.type.generic.data.HypixelDataHandler;
 import net.swofty.type.generic.data.datapoints.*;
 import net.swofty.type.generic.data.mongodb.ProfilesDatabase;
 import net.swofty.type.generic.data.mongodb.UserDatabase;
@@ -30,6 +28,7 @@ import net.swofty.type.skyblockgeneric.user.SkyBlockPlayer;
 import org.bson.Document;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
+import tools.jackson.core.JacksonException;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -91,8 +90,7 @@ public class SkyBlockDataHandler extends DataHandler {
                 datapoints.put(key, dp.setUser(this).setData(data));
             } catch (Exception e) {
                 datapoints.put(key, data.getDefaultDatapoint().setUser(this).setData(data));
-                Logger.info("Issue with SB datapoint " + key + " for user " + this.uuid + " - defaulted");
-                e.printStackTrace();
+                Logger.error(e, "Issue with SkyBlock datapoint {} for user {} - defaulting to default value", key, this.uuid);
             }
         }
     }
@@ -105,8 +103,7 @@ public class SkyBlockDataHandler extends DataHandler {
                         data.getDefaultDatapoint().deepClone().setUser(this).setData(data)
                 );
             } catch (Exception e) {
-                Logger.error("Issue with SB datapoint " + data.getKey() + " for user " + uuid + " - fix required");
-                e.printStackTrace();
+                Logger.error(e, "Issue with SkyBlock datapoint {} for user {} - requires fixing", data.getKey(), uuid);
             }
         }
     }
@@ -119,8 +116,8 @@ public class SkyBlockDataHandler extends DataHandler {
         for (Data data : Data.values()) {
             try {
                 document.put(data.getKey(), getDatapoint(data.getKey()).getSerializedValue());
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
+            } catch (JacksonException e) {
+                Logger.error(e, "Failed to serialize SkyBlock datapoint {} for user {}", data.getKey(), this.uuid);
             }
         }
         return document;
@@ -209,6 +206,8 @@ public class SkyBlockDataHandler extends DataHandler {
 
     // Same Data enum as before - unchanged
     public enum Data {
+        EXPERIENCED_STATISTICS("experienced_statistics", false, false, false,
+                DatapointStringList.class, new DatapointStringList("experienced_statistics")),
         PROFILE_NAME("profile_name", false, true, false,
                 DatapointString.class, new DatapointString("profile_name", "null"),
                 (player, datapoint) -> {},
@@ -363,6 +362,9 @@ public class SkyBlockDataHandler extends DataHandler {
         QUIVER("quiver", false, false, false,
                 DatapointQuiver.class, new DatapointQuiver("quiver")),
 
+        RACE_BEST_TIME("race_best_time", false, false, false, DatapointMapStringLong.class,
+                new DatapointMapStringLong("race_best_time")),
+
         ACCESSORY_BAG("accessory_bag", false, false, false,
                 DatapointAccessoryBag.class, new DatapointAccessoryBag("accessory_bag")),
 
@@ -377,6 +379,9 @@ public class SkyBlockDataHandler extends DataHandler {
 
         DEATHS("deaths", false, false, false,
                 DatapointDeaths.class, new DatapointDeaths("deaths")),
+
+        ARCHERY_PRACTICE("archery_practice", false, false, false,
+                DatapointArcheryPractice.class, new DatapointArcheryPractice("archery_practice")),
 
         SKYBLOCK_EXPERIENCE("skyblock_experience", false, false, false,
                 DatapointSkyBlockExperience.class, new DatapointSkyBlockExperience("skyblock_experience")),
@@ -423,8 +428,36 @@ public class SkyBlockDataHandler extends DataHandler {
         BOOSTER_COOKIE_EXPIRATION_DATE("booster_cookie_expiration_date", false, false, false,
                 DatapointLong.class, new DatapointLong("booster_cookie_expiration_date", 1L)),
 
+        TRIAL_OF_FIRE_LEVEL("trial_of_fire_level", false, false, false,
+                DatapointInteger.class, new DatapointInteger("trial_of_fire_level", 0)),
+
+        LATEST_NEW_YEAR_CAKE_YEAR("latest_new_year_cake_year", false, false, false,
+                DatapointInteger.class, new DatapointInteger("latest_new_year_cake_year", 0)),
+
+        LATEST_YEAR_PRESENT_PICKUP("latest_year_pickup_present", false, false, false,
+                DatapointPresentYear.class, new DatapointPresentYear("latest_year_pickup_present")),
+
+        SOULFLOW("soulflow", false, false, false,
+                DatapointInteger.class, new DatapointInteger("soulflow", 0)),
+
+        COMMISSIONS_COMPLETED("commissions_completed", false, false, false,
+                DatapointInteger.class, new DatapointInteger("commissions_completed", 0)),
+
+        COMMISSIONS("commissions", false, false, false,
+                DatapointCommissions.class, new DatapointCommissions("commissions")),
+
+        HOTM("hotm", false, false, false,
+                DatapointHOTM.class, new DatapointHOTM("hotm")),
+
         KAT("kat", false, false, false,
-                DatapointKat.class, new DatapointKat("kat"));
+                DatapointKat.class, new DatapointKat("kat")),
+
+        STASH("stash", false, false, false,
+                DatapointStash.class, new DatapointStash("stash")),
+
+        COLLECTED_MOB_TYPE_REWARDS("collected_mob_type_rewards", false, false, false,
+                DatapointCollectedMobTypeRewards.class, new DatapointCollectedMobTypeRewards("collected_mob_type_rewards")),
+        ;
 
         @Getter private final String key;
         @Getter private final Boolean isProfilePersistent;

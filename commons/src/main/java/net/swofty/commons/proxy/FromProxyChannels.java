@@ -2,6 +2,7 @@ package net.swofty.commons.proxy;
 
 import lombok.Getter;
 import net.swofty.commons.proxy.requirements.from.*;
+import net.swofty.commons.proxy.requirements.from.BroadcastStaffChatRequirements;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
@@ -15,6 +16,7 @@ public enum FromProxyChannels {
     RUN_EVENT_ON_SERVER("run-event", new RunEventRequirements()),
     PING_SERVER("ping-server", new PingServerRequirements()),
     GIVE_PLAYERS_ORIGIN_TYPE("give-players-origin-type", new GivePlayersOriginTypeRequirements()),
+    BROADCAST_STAFF_CHAT("broadcast-staff-chat", new BroadcastStaffChatRequirements())
     ;
 
     private final String channelName;

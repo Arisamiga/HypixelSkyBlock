@@ -1,19 +1,20 @@
 package net.swofty.type.hub.npcs;
 
 import net.minestom.server.coordinate.Pos;
-import net.swofty.commons.item.ItemType;
-import net.swofty.type.generic.entity.npc.NPCDialogue;
+import net.swofty.commons.skyblock.item.ItemType;
+import net.swofty.type.generic.entity.npc.HypixelNPC;
+import net.swofty.type.generic.entity.npc.configuration.HumanConfiguration;
 import net.swofty.type.generic.user.HypixelPlayer;
-import net.swofty.type.generic.entity.npc.NPCParameters;
 import net.swofty.type.skyblockgeneric.item.SkyBlockItem;
-import net.swofty.type.skyblockgeneric.user.SkyBlockPlayer;
 
 import java.util.stream.Stream;
 
-public class NPCNicole extends NPCDialogue {
+import net.swofty.type.generic.event.custom.NPCInteractEvent;
+
+public class NPCNicole extends HypixelNPC {
 
     public NPCNicole() {
-        super(new NPCParameters() {
+        super(new HumanConfiguration() {
             @Override
             public String[] holograms(HypixelPlayer player) {
                 return new String[]{"§9Nicole", "§e§lCLICK"};
@@ -35,14 +36,14 @@ public class NPCNicole extends NPCDialogue {
             }
 
             @Override
-            public boolean looking() {
+            public boolean looking(HypixelPlayer player) {
                 return true;
             }
         });
     }
 
     @Override
-    public void onClick(PlayerClickNPCEvent e) {
+    public void onClick(NPCInteractEvent e) {
         if (isInDialogue(e.player())) return;
         ItemType itemTypeLinker = new SkyBlockItem(e.player().getItemInMainHand()).getAttributeHandler().getPotentialType();
         // check if the item is cheap coffee ItemType
@@ -54,9 +55,9 @@ public class NPCNicole extends NPCDialogue {
     }
 
     @Override
-    public DialogueSet[] getDialogueSets(HypixelPlayer player) {
+    public DialogueSet[] dialogues(HypixelPlayer player) {
         return Stream.of(
-                NPCDialogue.DialogueSet.builder()
+                DialogueSet.builder()
                         .key("hello").lines(new String[]{
                                 "Books are mesmerizing.",
                                 "Their words offer permanence.",
@@ -65,7 +66,7 @@ public class NPCNicole extends NPCDialogue {
                                 "Space is only a construct...",
                                 "§cWhew! §fI need some coffee!"
                         }).build(),
-                NPCDialogue.DialogueSet.builder()
+                DialogueSet.builder()
                         .key("coffee-hello").lines(new String[]{
                                 "Thank you!",
                                 "§dElise §freally wanted this but she is shy.",

@@ -1,6 +1,7 @@
 package net.swofty.type.skyblockgeneric.commands;
 
 import net.minestom.server.MinecraftServer;
+import org.tinylog.Logger;
 import net.minestom.server.timer.SchedulerManager;
 import net.swofty.type.generic.command.CommandParameters;
 import net.swofty.type.generic.command.HypixelCommand;
@@ -11,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @CommandParameters(aliases = "taskcount",
         description = "Gets the number of tasks currently running on the server",
         usage = "/taskcount",
-        permission = Rank.ADMIN,
+        permission = Rank.STAFF,
         allowsConsole = false)
 public class HowManyTasksCommand extends HypixelCommand {
     @Override
@@ -26,7 +27,7 @@ public class HowManyTasksCommand extends HypixelCommand {
             try {
                 TASK_COUNTER = (AtomicInteger) manager.getClass().getDeclaredField("TASK_COUNTER").get(manager);
             } catch (NoSuchFieldException | IllegalAccessException e) {
-                e.printStackTrace();
+                Logger.error(e, "Error while counting tasks");
                 return;
             }
 

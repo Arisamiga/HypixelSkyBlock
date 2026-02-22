@@ -2,7 +2,7 @@ package net.swofty.type.skyblockgeneric.commands;
 
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.timer.TaskSchedule;
-import net.swofty.commons.item.ItemType;
+import net.swofty.commons.skyblock.item.ItemType;
 import net.swofty.type.generic.command.CommandParameters;
 import net.swofty.type.generic.command.HypixelCommand;
 import net.swofty.type.skyblockgeneric.item.SkyBlockItem;
@@ -13,7 +13,7 @@ import net.swofty.type.generic.user.categories.Rank;
 @CommandParameters(aliases = "cl",
         description = "Rid your inventory of useless items",
         usage = "/clear",
-        permission = Rank.ADMIN,
+        permission = Rank.STAFF,
         allowsConsole = false)
 public class ClearCommand extends HypixelCommand {
     @Override

@@ -1,12 +1,13 @@
 package net.swofty.type.skyblockgeneric.bazaar;
 
 import net.swofty.commons.ServiceType;
-import net.swofty.commons.item.ItemType;
+import net.swofty.commons.skyblock.item.ItemType;
 import net.swofty.commons.protocol.objects.bazaar.*;
 import net.swofty.proxyapi.ProxyService;
 import net.swofty.type.skyblockgeneric.user.SkyBlockPlayer;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -240,20 +241,29 @@ public class BazaarConnector {
     }
 
     public CompletableFuture<TransactionProcessResult> processAllPendingTransactions() {
-        if (!isOnline().join()) return CompletableFuture.completedFuture(new TransactionProcessResult(0, 0, List.of(), List.of()));
-
-        return getPendingTransactions().thenCompose(transactions -> {
-            if (transactions.isEmpty()) {
-                return CompletableFuture.completedFuture(
-                        new TransactionProcessResult(0, 0, List.of(), List.of())
-                );
+        // Non-blocking service availability check
+        return isOnline().thenCompose(online -> {
+            if (!online) {
+                return CompletableFuture.completedFuture(new TransactionProcessResult(0, 0, List.of(), List.of()));
             }
+
+            return getPendingTransactions().thenCompose(transactions -> {
+                if (transactions == null || transactions.isEmpty()) {
+                    return CompletableFuture.completedFuture(new TransactionProcessResult(0, 0, List.of(), List.of()));
+                }
+
+                return processTransactions(transactions);
+            });
+        });
+    }
+
+    private CompletableFuture<TransactionProcessResult> processTransactions(List<PendingTransaction> transactions) {
 
             player.sendMessage("§6[Bazaar] §7Processing " + transactions.size() + " pending transaction" +
                     (transactions.size() == 1 ? "" : "s") + "...");
 
-            List<String> successfulIds = new java.util.ArrayList<>();
-            List<String> failedIds = new java.util.ArrayList<>();
+            List<String> successfulIds = new ArrayList<>();
+            List<String> failedIds = new ArrayList<>();
 
             for (PendingTransaction tx : transactions) {
                 try {
@@ -302,7 +312,6 @@ public class BazaarConnector {
                 }
                 return finalResult;
             });
-        });
     }
 
     private OrderStatistics calculateBuyStatistics(List<MarketOrder> buyOrders) {
@@ -310,11 +319,19 @@ public class BazaarConnector {
             return new OrderStatistics(0, 0, 0);
         }
 
-        double total = buyOrders.stream().mapToDouble(MarketOrder::price).sum();
-        double average = total / buyOrders.size();
-        double highest = buyOrders.stream().mapToDouble(MarketOrder::price).max().orElse(0);
-        double lowest = buyOrders.stream().mapToDouble(MarketOrder::price).min().orElse(0);
+        // Single-pass calculation for better performance
+        double total = 0;
+        double highest = Double.MIN_VALUE;
+        double lowest = Double.MAX_VALUE;
 
+        for (MarketOrder order : buyOrders) {
+            double price = order.price();
+            total += price;
+            if (price > highest) highest = price;
+            if (price < lowest) lowest = price;
+        }
+
+        double average = total / buyOrders.size();
         return new OrderStatistics(highest, lowest, average);
     }
 
@@ -323,11 +340,19 @@ public class BazaarConnector {
             return new OrderStatistics(0, 0, 0);
         }
 
-        double total = sellOrders.stream().mapToDouble(MarketOrder::price).sum();
-        double average = total / sellOrders.size();
-        double highest = sellOrders.stream().mapToDouble(MarketOrder::price).max().orElse(0);
-        double lowest = sellOrders.stream().mapToDouble(MarketOrder::price).min().orElse(0);
+        // Single-pass calculation for better performance
+        double total = 0;
+        double highest = Double.MIN_VALUE;
+        double lowest = Double.MAX_VALUE;
 
+        for (MarketOrder order : sellOrders) {
+            double price = order.price();
+            total += price;
+            if (price > highest) highest = price;
+            if (price < lowest) lowest = price;
+        }
+
+        double average = total / sellOrders.size();
         return new OrderStatistics(highest, lowest, average);
     }
 

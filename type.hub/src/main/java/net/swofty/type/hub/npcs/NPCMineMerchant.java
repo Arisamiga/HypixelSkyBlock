@@ -1,19 +1,22 @@
 package net.swofty.type.hub.npcs;
 
 import net.minestom.server.coordinate.Pos;
-import net.swofty.type.hub.gui.GUIShopMineMerchant;
 import net.swofty.type.generic.data.datapoints.DatapointToggles;
-import net.swofty.type.generic.entity.npc.NPCDialogue;
+import net.swofty.type.generic.entity.npc.HypixelNPC;
+import net.swofty.type.generic.entity.npc.configuration.HumanConfiguration;
 import net.swofty.type.generic.user.HypixelPlayer;
-import net.swofty.type.generic.entity.npc.NPCParameters;
+import net.swofty.type.hub.gui.GUIShopMadRedstoneEngineer;
+import net.swofty.type.hub.gui.GUIShopMineMerchant;
 import net.swofty.type.skyblockgeneric.user.SkyBlockPlayer;
 
-public class NPCMineMerchant extends NPCDialogue {
+import net.swofty.type.generic.event.custom.NPCInteractEvent;
+
+public class NPCMineMerchant extends HypixelNPC {
     public NPCMineMerchant() {
-        super(new NPCParameters() {
+        super(new HumanConfiguration() {
             @Override
             public String[] holograms(HypixelPlayer player) {
-                return new String[]{"§9Mine Merchant", "§e§lCLICK"};
+                return new String[]{"Mine Merchant", "§e§lCLICK"};
             }
 
             @Override
@@ -32,14 +35,14 @@ public class NPCMineMerchant extends NPCDialogue {
             }
 
             @Override
-            public boolean looking() {
+            public boolean looking(HypixelPlayer player) {
                 return true;
             }
         });
     }
 
     @Override
-    public void onClick(PlayerClickNPCEvent e) {
+    public void onClick(NPCInteractEvent e) {
         SkyBlockPlayer player = (SkyBlockPlayer) e.player();
         if (isInDialogue(player)) return;
         boolean hasSpokenBefore = player.getToggles().get(DatapointToggles.Toggles.ToggleType.HAS_SPOKEN_TO_MINE_MERCHANT);
@@ -51,13 +54,13 @@ public class NPCMineMerchant extends NPCDialogue {
             return;
         }
 
-        new GUIShopMineMerchant().open(player);
+        player.openView(new GUIShopMineMerchant());
     }
 
     @Override
-    public NPCDialogue.DialogueSet[] getDialogueSets(HypixelPlayer player) {
-        return new NPCDialogue.DialogueSet[] {
-                NPCDialogue.DialogueSet.builder()
+    public DialogueSet[] dialogues(HypixelPlayer player) {
+        return new DialogueSet[] {
+                DialogueSet.builder()
                         .key("hello").lines(new String[]{
                                 "My specialities are ores, stone, and mining equipment.",
                                 "Click me again to open the Miner Shop!"

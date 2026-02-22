@@ -2,13 +2,12 @@ package net.swofty.type.skyblockgeneric.skill;
 
 import net.minestom.server.item.Material;
 import net.swofty.commons.StringUtility;
-import net.swofty.commons.statistics.ItemStatistic;
-import net.swofty.commons.statistics.ItemStatistics;
+import net.swofty.commons.skyblock.statistics.ItemStatistic;
+import net.swofty.commons.skyblock.statistics.ItemStatistics;
 import net.swofty.type.generic.data.datapoints.DatapointDouble;
 import net.swofty.type.skyblockgeneric.data.SkyBlockDataHandler;
 import net.swofty.type.skyblockgeneric.data.datapoints.DatapointSkills;
 import net.swofty.type.skyblockgeneric.region.RegionType;
-import net.swofty.type.skyblockgeneric.skill.skills.RunecraftingSkill;
 import net.swofty.type.skyblockgeneric.user.SkyBlockPlayer;
 
 import java.util.Arrays;
@@ -59,15 +58,14 @@ public abstract class SkillCategory {
                     case STATS_BASE -> {
                         ItemStatistic statistic = ((BaseStatisticReward) unlock).getStatistic();
                         lore.add("§7  §8+§a" + StringUtility.decimalify(((BaseStatisticReward) unlock).amountAdded(), 1) +
-                                statistic.getSuffix() + " " + statistic.getDisplayColor() + statistic.getSymbol() + " " +
-                                statistic.getDisplayName());
+                                statistic.getSuffix() + " " + statistic.getFullDisplayName());
                     }
                     case STATS_ADDITIVE_PERCENTAGE -> {
                         ItemStatistic statistic = ((AdditivePercentageStatisticReward) unlock).getStatistic();
                         lore.add("§7  §8+§a" + StringUtility.decimalify(((AdditivePercentageStatisticReward) unlock).amountAdded() * 100, 1) +
-                                "% " + statistic.getDisplayColor() + statistic.getSymbol() + " " + statistic.getDisplayName());
+                                "% " + statistic.getFullDisplayName());
                     }
-                    case RUNE -> lore.add("§7  Access to Level §d" + ((RunecraftingSkill.RuneReward) unlock).getRuneLevel() + " §7Runes");
+                    case RUNE -> lore.add("§7  Access to Level §d" + ((RuneReward) unlock).getRuneLevel() + " §7Runes");
                 }
             });
 
@@ -171,5 +169,19 @@ public abstract class SkillCategory {
         }
 
         public abstract RegionType getRegion();
+    }
+
+    public abstract static class RuneReward extends Reward {
+        @Override
+        public UnlockType type() {
+            return UnlockType.RUNE;
+        }
+
+        @Override
+        public void onUnlock(SkyBlockPlayer player) {
+            // Handled by the rune system
+        }
+
+        public abstract int getRuneLevel();
     }
 }

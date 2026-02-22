@@ -10,7 +10,7 @@ import net.swofty.type.generic.user.categories.Rank;
 @CommandParameters(aliases = "e",
         description = "Open the E menu",
         usage = "/e",
-        permission = Rank.ADMIN,
+        permission = Rank.STAFF,
         allowsConsole = false)
 public class ItemListCommand extends HypixelCommand {
     @Override
@@ -18,7 +18,7 @@ public class ItemListCommand extends HypixelCommand {
         command.addSyntax((sender, context) -> {
             if (!permissionCheck(sender)) return;
 
-            new GUICreative().open((SkyBlockPlayer) sender);
+            ((SkyBlockPlayer) sender).openView(new GUICreative(), GUICreative.createInitialState());
         });
 
         ArgumentString lookup = new ArgumentString("lookup");
@@ -26,7 +26,7 @@ public class ItemListCommand extends HypixelCommand {
             if (!permissionCheck(sender)) return;
 
             String lookupValue = context.get(lookup);
-            new GUICreative().open((SkyBlockPlayer) sender, lookupValue, 1);
+            ((SkyBlockPlayer) sender).openView(new GUICreative(), GUICreative.createInitialState(lookupValue, 0));
         }, lookup);
     }
 }

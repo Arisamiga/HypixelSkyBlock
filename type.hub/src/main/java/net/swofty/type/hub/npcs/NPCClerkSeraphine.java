@@ -1,17 +1,18 @@
 package net.swofty.type.hub.npcs;
 
 import net.minestom.server.coordinate.Pos;
-import net.swofty.type.generic.entity.npc.NPCDialogue;
 import net.swofty.type.generic.user.HypixelPlayer;
-import net.swofty.type.generic.entity.npc.NPCParameters;
-import net.swofty.type.skyblockgeneric.user.SkyBlockPlayer;
+import net.swofty.type.generic.entity.npc.HypixelNPC;
+import net.swofty.type.generic.entity.npc.configuration.HumanConfiguration;
 
 import java.util.stream.Stream;
 
-public class NPCClerkSeraphine extends NPCDialogue {
+import net.swofty.type.generic.event.custom.NPCInteractEvent;
+
+public class NPCClerkSeraphine extends HypixelNPC {
 
     public NPCClerkSeraphine() {
-        super(new NPCParameters() {
+        super(new HumanConfiguration() {
             @Override
             public String[] holograms(HypixelPlayer player) {
                 return new String[]{"Clerk Seraphine", "§e§lCLICK"};
@@ -29,31 +30,31 @@ public class NPCClerkSeraphine extends NPCDialogue {
 
             @Override
             public Pos position(HypixelPlayer player) {
-                return new Pos(11.5, 71, -101, 90, 0);
+                return new Pos(4.5, 72, -104.5, 0, 0);
             }
 
             @Override
-            public boolean looking() {
+            public boolean looking(HypixelPlayer player) {
                 return true;
             }
         });
     }
 
     @Override
-    public void onClick(PlayerClickNPCEvent e) {
+    public void onClick(NPCInteractEvent e) {
         if (isInDialogue(e.player())) return;
         setDialogue(e.player(), "hello");
     }
 
     @Override
-    public NPCDialogue.DialogueSet[] getDialogueSets(HypixelPlayer player) {
+    public DialogueSet[] dialogues(HypixelPlayer player) {
         return Stream.of(
-                NPCDialogue.DialogueSet.builder()
+                DialogueSet.builder()
                         .key("hello").lines(new String[]{
                                 "Welcome to the §bCommunity Center§f!",
                                 "Contribute to community projects, upgrade your account, and more by talking to §dElizabeth§f!",
                                 "You can also vote in the §bmayor elections §fby heading through the warp upstairs!"
                         }).build()
-        ).toArray(NPCDialogue.DialogueSet[]::new);
+        ).toArray(DialogueSet[]::new);
     }
 }

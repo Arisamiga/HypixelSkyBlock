@@ -16,7 +16,7 @@ public class ProxyAPI {
         this.serverUUID = serverUUID;
 
         RedisAPI.generateInstance(URI);
-        RedisAPI.getInstance().setFilterID(serverUUID.toString());
+        RedisAPI.getInstance().setFilterId(serverUUID.toString());
     }
 
     public void registerFromProxyHandler(ProxyToClient handler) {
@@ -69,6 +69,11 @@ public class ProxyAPI {
             Thread.startVirtualThread(() -> {
                 // Handle message
                 JSONObject response = handler.onMessage(json);
+
+                if (response == null) {
+                    // Don't send a response if null
+                    return;
+                }
 
                 // Send response back to service with this server's UUID
                 RedisAPI.getInstance().publishMessage(

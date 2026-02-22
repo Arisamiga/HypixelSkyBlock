@@ -11,7 +11,7 @@ import net.minestom.server.item.Material;
 import net.swofty.commons.ServiceType;
 import net.swofty.commons.StringUtility;
 import net.swofty.commons.TrackedItem;
-import net.swofty.commons.item.ItemType;
+import net.swofty.commons.skyblock.item.ItemType;
 import net.swofty.commons.protocol.objects.itemtracker.TrackedItemRetrieveProtocolObject;
 import net.swofty.proxyapi.ProxyService;
 import net.swofty.type.generic.gui.inventory.HypixelPaginatedGUI;
@@ -27,6 +27,7 @@ import net.swofty.type.skyblockgeneric.museum.MuseumDisplays;
 import net.swofty.type.skyblockgeneric.museum.MuseumableItemCategory;
 import net.swofty.type.skyblockgeneric.user.SkyBlockPlayer;
 import net.swofty.type.skyblockgeneric.utility.ItemPriceCalculator;
+import org.tinylog.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -159,6 +160,9 @@ public class GUIMuseumArmorCategory extends HypixelPaginatedGUI<ArmorSetRegistry
     public PaginationList<ArmorSetRegistry> fillPaged(HypixelPlayer player, PaginationList<ArmorSetRegistry> paged) {
         MuseumableItemCategory.ARMOR_SETS.getItems().forEach(item -> {
             ArmorSetRegistry armorSet = ArmorSetRegistry.getArmorSet(item);
+            if (armorSet == null) {
+                Logger.error("ArmorSetRegistry is null! Add the armor set of " + item.getDisplayName() + " to the registry!");
+            }
             if (paged.contains(armorSet))
                 return;
             paged.add(armorSet);

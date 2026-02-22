@@ -4,7 +4,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Updates;
-import net.swofty.commons.SkyBlockPlayerProfiles;
+import net.swofty.commons.skyblock.SkyBlockPlayerProfiles;
 import net.swofty.type.generic.data.DataHandler;
 import net.swofty.type.generic.data.HypixelDataHandler;
 import org.bson.Document;
@@ -39,7 +39,7 @@ public class UserDatabase {
         return SkyBlockPlayerProfiles.deserialize(document);
     }
 
-    public void deleteProfiles() {
+    public void deleteSelf() {
         collection.deleteOne(new Document("_id", id.toString()));
     }
 

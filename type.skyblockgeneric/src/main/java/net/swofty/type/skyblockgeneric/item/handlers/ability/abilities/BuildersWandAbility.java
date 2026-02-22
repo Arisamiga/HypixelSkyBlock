@@ -6,7 +6,8 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.instance.block.BlockFace;
 import net.minestom.server.item.Material;
-import net.swofty.commons.item.ItemType;
+import net.swofty.commons.skyblock.item.ItemType;
+import net.swofty.type.generic.HypixelConst;
 import net.swofty.type.skyblockgeneric.item.handlers.ability.RegisteredAbility;
 import net.swofty.type.skyblockgeneric.user.SkyBlockPlayer;
 
@@ -15,17 +16,16 @@ import java.util.List;
 
 public class BuildersWandAbility extends RegisteredAbility {
 
-    @SuppressWarnings("preview")
     public BuildersWandAbility() {
         super("GRAND_ARCHITECT", "Grand Architect",
-                "Right-click the face of a block to extend all connected block faces.",
+                (player, item) -> "Right-click the face of a block to extend all connected block faces.",
                 AbilityActivation.RIGHT_CLICK_BLOCK, 0, new RegisteredAbility.NoAbilityCost(),
                 (player, item, origin, face) -> {
-                    fillConnectedFaces(player, new Pos(origin), face);
+                    return fillConnectedFaces(player, new Pos(origin), face);
                 });
     }
 
-    private static void fillConnectedFaces(SkyBlockPlayer player, Pos origin, BlockFace face) {
+    private static boolean fillConnectedFaces(SkyBlockPlayer player, Pos origin, BlockFace face) {
         Material fillMaterial = Material.fromKey(player.getInstance().getBlock(origin).key());
         int blocksInInventory = player.countItem(ItemType.fromMaterial(fillMaterial));
         int blockLimit = 164;
@@ -36,8 +36,8 @@ public class BuildersWandAbility extends RegisteredAbility {
         List<Pos> blocksForUndo = new ArrayList<>(); // NOTE: To be used later
         blocks.add(origin);
         Instance w = player.getInstance();
-        Vec[] check = null;
-        Vec translate = null;
+        Vec[] check;
+        Vec translate;
         int blocksPlaced = 0;
 
         check = switch (face) {
@@ -65,8 +65,7 @@ public class BuildersWandAbility extends RegisteredAbility {
                 }
             }
             Pos fillBlock = l.add(translate);
-            // TODO: make sure player is on island
-            if (player.isOnIsland()) {
+            if (HypixelConst.isIslandServer()) {
                 blocks.removeIf(blocks.getFirst()::equals);
                 if (!player.getInstance().getBlock(fillBlock).key().equals(fillMaterial.key())) {
                     player.getInstance().setBlock(fillBlock, Block.fromKey(fillMaterial.key()));
@@ -84,10 +83,10 @@ public class BuildersWandAbility extends RegisteredAbility {
         }
         if (blocksPlaced == 0) {
             player.sendMessage("§cYou cannot place any blocks! You do not have enough blocks to place with your Builder's wand!");
+            return false;
         }
-        if (blocksPlaced != 0) {
-            player.takeItem(ItemType.fromMaterial(fillMaterial), blocksPlaced);
-            player.sendMessage("&eYou built &a" + blocksPlaced + "&e blocks!");
-        }
+        player.takeItem(ItemType.fromMaterial(fillMaterial), blocksPlaced);
+        player.sendMessage("&eYou built &a" + blocksPlaced + "&e blocks!");
+        return true;
     }
 }

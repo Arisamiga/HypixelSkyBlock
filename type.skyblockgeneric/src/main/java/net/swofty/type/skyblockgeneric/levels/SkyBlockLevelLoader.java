@@ -4,11 +4,12 @@ import lombok.Data;
 import net.kyori.adventure.key.InvalidKeyException;
 import net.minestom.server.item.Material;
 import net.swofty.commons.YamlFileUtils;
-import net.swofty.commons.statistics.ItemStatistic;
-import net.swofty.commons.statistics.ItemStatistics;
+import net.swofty.commons.skyblock.statistics.ItemStatistic;
+import net.swofty.commons.skyblock.statistics.ItemStatistics;
 import net.swofty.type.skyblockgeneric.levels.unlocks.CustomLevelUnlock;
 import net.swofty.type.skyblockgeneric.levels.unlocks.SkyBlockLevelStatisticUnlock;
 import org.jetbrains.annotations.Nullable;
+import org.tinylog.Logger;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -85,7 +86,7 @@ public class SkyBlockLevelLoader {
 
             return requirements.toArray(new SkyBlockLevelRequirement[0]);
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.error(e, "Failed to load SkyBlock level requirements from file: {}", FILE_NAME);
             return new SkyBlockLevelRequirement[0];
         }
     }
@@ -104,13 +105,14 @@ public class SkyBlockLevelLoader {
 
         // Parse prefix item if provided
         Material prefixItem = null;
-        if (entry.prefixItem != null) {
+        String entryPrefixItem = entry.prefixItem;
+        if (entryPrefixItem != null) {
             try {
-                prefixItem = Material.fromKey(entry.prefixItem.toUpperCase());
+                prefixItem = Material.fromKey(entryPrefixItem.toUpperCase());
             } catch (IllegalArgumentException | InvalidKeyException e) {
                 // Try to find by key value
                 prefixItem = Material.values().stream()
-                        .filter(material -> material.key().value().equalsIgnoreCase(entry.prefixItem))
+                        .filter(material -> material.key().value().equalsIgnoreCase(entryPrefixItem))
                         .findFirst()
                         .orElse(null);
             }

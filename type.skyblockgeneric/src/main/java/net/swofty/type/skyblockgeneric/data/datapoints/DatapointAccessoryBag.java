@@ -4,13 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import net.swofty.commons.item.ItemType;
-import net.swofty.commons.item.Rarity;
-import net.swofty.commons.item.UnderstandableSkyBlockItem;
+import net.swofty.commons.skyblock.item.ItemType;
+import net.swofty.commons.skyblock.item.Rarity;
+import net.swofty.commons.skyblock.item.UnderstandableSkyBlockItem;
 import net.swofty.commons.protocol.Serializer;
 import net.swofty.type.skyblockgeneric.data.SkyBlockDatapoint;
 import net.swofty.type.skyblockgeneric.item.SkyBlockItem;
-import net.swofty.type.skyblockgeneric.item.components.TieredTalismanComponent;
+import net.swofty.type.skyblockgeneric.item.TieredTalismansRegistry;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
@@ -91,22 +91,36 @@ public class DatapointAccessoryBag extends SkyBlockDatapoint<DatapointAccessoryB
 
         public List<SkyBlockItem> getUniqueAccessories() {
             List<SkyBlockItem> accessories = new ArrayList<>(getAllAccessories());
-            Map<ItemType, SkyBlockItem> highestTierTalismans = new HashMap<>();
+            Map<TieredTalismansRegistry, SkyBlockItem> highestTierTalismans = new HashMap<>();
+            Map<ItemType, SkyBlockItem> nonTieredAccessories = new HashMap<>();
 
             for (SkyBlockItem accessory : accessories) {
-                if (accessory.hasComponent(TieredTalismanComponent.class)) {
-                    TieredTalismanComponent currentTalisman = accessory.getComponent(TieredTalismanComponent.class);
-                    ItemType baseTalisman = currentTalisman.getBaseTier();
-                    TieredTalismanComponent tieredTalisman = highestTierTalismans.containsKey(baseTalisman) ? highestTierTalismans.get(baseTalisman).getComponent(TieredTalismanComponent.class) : null;
+                ItemType itemType = accessory.getAttributeHandler().getPotentialType();
+                TieredTalismansRegistry talismanGroup = TieredTalismansRegistry.getTieredTalisman(itemType);
 
-                    if (tieredTalisman == null || tieredTalisman.getTier() < currentTalisman.getTier()) {
-                        highestTierTalismans.put(baseTalisman, accessory);
+                if (talismanGroup != null) {
+                    if (talismanGroup.isTiered()) {
+                        SkyBlockItem currentBest = highestTierTalismans.get(talismanGroup);
+                        ItemType currentBestType = currentBest != null ? currentBest.getAttributeHandler().getPotentialType() : null;
+
+                        int currentTier = currentBestType != null ? TieredTalismansRegistry.getTier(currentBestType) : -1;
+                        int newTier = TieredTalismansRegistry.getTier(itemType);
+
+                        if (currentBest == null || newTier > currentTier) {
+                            highestTierTalismans.put(talismanGroup, accessory);
+                        }
+                    } else {
+                        nonTieredAccessories.put(itemType, accessory);
                     }
                 } else if (!accessory.isAir()) {
-                    highestTierTalismans.put(accessory.getAttributeHandler().getPotentialType(), accessory);
+                    nonTieredAccessories.put(itemType, accessory);
                 }
             }
-            return List.copyOf(highestTierTalismans.values());
+
+            List<SkyBlockItem> result = new ArrayList<>(highestTierTalismans.values());
+            result.addAll(nonTieredAccessories.values());
+
+            return result;
         }
 
         public List<SkyBlockItem> getUniqueAccessories(Rarity rarity) {

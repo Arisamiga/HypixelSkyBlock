@@ -5,11 +5,11 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.Material;
-import net.swofty.type.skyblockgeneric.region.SkyBlockMiningConfiguration;
+import net.swofty.type.skyblockgeneric.region.SkyBlockRegenConfiguration;
 
 import java.util.List;
 
-public class MineLogsConfiguration extends SkyBlockMiningConfiguration {
+public class MineLogsConfiguration extends SkyBlockRegenConfiguration {
     @Override
     public MiningTask handleStageOne(MiningTask task, Pos brokenBlock) {
         Block atPosition = task.getInstance().getBlock(brokenBlock);
@@ -27,7 +27,7 @@ public class MineLogsConfiguration extends SkyBlockMiningConfiguration {
 
     @Override
     public List<Material> getMineableBlocks(Instance instance, Point point) {
-        return List.of(Material.OAK_LOG, Material.OAK_LEAVES);
+        return List.of(Material.OAK_LOG, Material.OAK_LEAVES, Material.OAK_WOOD);
     }
 
     @Override

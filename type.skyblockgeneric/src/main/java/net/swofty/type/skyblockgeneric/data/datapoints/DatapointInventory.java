@@ -1,6 +1,7 @@
 package net.swofty.type.skyblockgeneric.data.datapoints;
 
-import net.swofty.commons.item.UnderstandableSkyBlockItem;
+import net.swofty.commons.skyblock.item.UnderstandableSkyBlockItem;
+import org.tinylog.Logger;
 import net.swofty.commons.protocol.Serializer;
 import net.swofty.type.skyblockgeneric.data.SkyBlockDatapoint;
 import net.swofty.type.skyblockgeneric.user.SkyBlockInventory;
@@ -55,7 +56,7 @@ public class DatapointInventory extends SkyBlockDatapoint<SkyBlockInventory> {
                 leggings = UnderstandableSkyBlockItem.deserialize(jsonObject.getString("leggings"));
                 boots = UnderstandableSkyBlockItem.deserialize(jsonObject.getString("boots"));
 
-                e.printStackTrace();
+                Logger.error(e, "Failed to deserialize inventory datapoint");
             }
 
             inventory.setHelmet(helmet);

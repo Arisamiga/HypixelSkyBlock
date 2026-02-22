@@ -5,6 +5,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.LivingEntity;
 import net.minestom.server.entity.Player;
@@ -13,20 +14,24 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.timer.ExecutionType;
 import net.minestom.server.timer.Scheduler;
 import net.minestom.server.timer.TaskSchedule;
-import net.swofty.commons.item.ItemType;
-import net.swofty.commons.item.PotatoType;
-import net.swofty.commons.item.attribute.attributes.ItemAttributeHotPotatoBookData;
-import net.swofty.commons.item.attribute.attributes.ItemAttributeRuneInfusedWith;
-import net.swofty.commons.statistics.ItemStatistic;
-import net.swofty.commons.statistics.ItemStatistics;
+import net.swofty.commons.skyblock.item.ItemType;
+import net.swofty.commons.skyblock.item.PotatoType;
+import net.swofty.commons.skyblock.item.attribute.attributes.ItemAttributeHotPotatoBookData;
+import net.swofty.commons.skyblock.item.attribute.attributes.ItemAttributeRuneInfusedWith;
+import net.swofty.commons.skyblock.statistics.ItemStatistic;
+import net.swofty.commons.skyblock.statistics.ItemStatistics;
+import net.swofty.type.generic.data.datapoints.DatapointStringList;
 import net.swofty.type.skyblockgeneric.SkyBlockGenericLoader;
 import net.swofty.type.skyblockgeneric.bestiary.BestiaryData;
+import net.swofty.type.skyblockgeneric.data.SkyBlockDataHandler;
 import net.swofty.type.skyblockgeneric.data.datapoints.DatapointSkills;
 import net.swofty.type.skyblockgeneric.data.datapoints.DatapointSkyBlockExperience;
 import net.swofty.type.skyblockgeneric.enchantment.EnchantmentType;
 import net.swofty.type.skyblockgeneric.enchantment.SkyBlockEnchantment;
 import net.swofty.type.skyblockgeneric.enchantment.abstr.EventBasedEnchant;
+import net.swofty.type.skyblockgeneric.enchantment.debuff.LethalityDebuff;
 import net.swofty.type.skyblockgeneric.entity.mob.BestiaryMob;
+import net.swofty.type.skyblockgeneric.entity.mob.SkyBlockMob;
 import net.swofty.type.skyblockgeneric.event.value.SkyBlockValueEvent;
 import net.swofty.type.skyblockgeneric.event.value.events.RegenerationValueUpdateEvent;
 import net.swofty.type.skyblockgeneric.gems.Gemstone;
@@ -360,25 +365,37 @@ public class PlayerStatistics {
 
     public Map.Entry<Double, Boolean> runPrimaryDamageFormula(ItemStatistics enemyStatistics, SkyBlockPlayer causer, LivingEntity enemy) {
         ItemStatistics all = allStatistics(causer, enemy);
-        return runPrimaryDamageFormula(all, enemyStatistics);
+        return runPrimaryDamageFormula(all, enemyStatistics, enemy);
     }
 
     public static Map.Entry<Double, Boolean> runPrimaryDamageFormula(ItemStatistics originStatistics, ItemStatistics enemyStatistics) {
+        return runPrimaryDamageFormula(originStatistics, enemyStatistics, null);
+    }
+
+    private static Map.Entry<Double, Boolean> runPrimaryDamageFormula(ItemStatistics originStatistics, ItemStatistics enemyStatistics, LivingEntity enemy) {
         boolean isCrit = false;
-        double critChance = originStatistics.getBase(ItemStatistic.CRIT_CHANCE);
+        double critChance = originStatistics.getBase(ItemStatistic.CRITICAL_CHANCE);
         if (Math.random() <= (critChance / 100))
             isCrit = true;
 
         double baseDamage = originStatistics.getOverall(ItemStatistic.DAMAGE);
         double strength = originStatistics.getOverall(ItemStatistic.STRENGTH);
-        double critDamage = originStatistics.getOverall(ItemStatistic.CRIT_DAMAGE);
+        double critDamage = originStatistics.getOverall(ItemStatistic.CRITICAL_DAMAGE);
 
         double strengthDamage = (1 + (strength / 100));
         double criticalDamage = isCrit ? 1 + (critDamage / 100) : 1;
 
         double damage = baseDamage * strengthDamage * criticalDamage;
-        if (enemyStatistics.getOverall(ItemStatistic.DEFENSE) > 0)
-            damage = damage * (1 - (enemyStatistics.getOverall(ItemStatistic.DEFENSE) / (enemyStatistics.getOverall(ItemStatistic.DEFENSE) + 100)));
+
+        double enemyDefense = enemyStatistics.getOverall(ItemStatistic.DEFENSE);
+
+        if (enemy instanceof SkyBlockMob) {
+            double lethalityReduction = LethalityDebuff.getTotalDefenseReduction(enemy.getUuid());
+            enemyDefense *= (1 - lethalityReduction);
+        }
+
+        if (enemyDefense > 0)
+            damage = damage * (1 - (enemyDefense / (enemyDefense + 100)));
         return new AbstractMap.SimpleEntry<>(damage, isCrit);
     }
 
@@ -392,6 +409,18 @@ public class PlayerStatistics {
 
     public void boostStatistic(TemporaryStatistic temporaryStatistic) {
         temporaryStatistics.add(temporaryStatistic);
+    }
+
+    /**
+     * Get all active temporary statistics that have display info (for tablist)
+     */
+    public List<TemporaryStatistic> getDisplayableActiveEffects() {
+        synchronized (temporaryStatistics) {
+            temporaryStatistics.removeIf(stat -> stat.getExpiration() < System.currentTimeMillis());
+            return temporaryStatistics.stream()
+                    .filter(TemporaryStatistic::hasDisplayInfo)
+                    .toList();
+        }
     }
 
     public void boostStatistic(TemporaryConditionalStatistic temporaryStatistic) {
@@ -412,7 +441,49 @@ public class PlayerStatistics {
         manaLoop();
         missionLoop();
         statisticsLoop();
+        experiencedStatisticsLoop();
         speedLoop();
+    }
+
+    public static void experiencedStatisticsLoop() {
+        Scheduler scheduler = MinecraftServer.getSchedulerManager();
+        scheduler.submitTask(() -> {
+            SkyBlockGenericLoader.getLoadedPlayers().forEach(player -> {
+                Thread.startVirtualThread(() -> {
+                    List<String> experiencedStatistics = player.getSkyblockDataHandler().get(
+                            SkyBlockDataHandler.Data.EXPERIENCED_STATISTICS, DatapointStringList.class
+                    ).getValue();
+
+                    ItemStatistics statistics = player.getStatistics().allStatistics();
+                    for (ItemStatistic statistic : ItemStatistic.values()) {
+                        if (experiencedStatistics.contains(statistic.name())) continue;
+
+                        @Nullable StatisticDescription description = StatisticDescription.fromStatistic(statistic);
+                        if (description == null) continue;
+
+                        double experiencedValue = statistics.getOverall(statistic);
+                        if (experiencedValue <= 0) continue;
+
+                        experiencedStatistics.add(statistic.name());
+                        player.getSkyblockDataHandler().get(
+                                SkyBlockDataHandler.Data.EXPERIENCED_STATISTICS, DatapointStringList.class
+                        ).setValue(experiencedStatistics);
+
+                        player.sendMessage("§a§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+                        player.sendMessage("§6§lNEW STAT DISCOVERED! §r" + statistic.getFullDisplayName());
+                        player.sendMessage(" ");
+                        player.sendMessage(description.getDescription());
+                        player.sendMessage(" ");
+                        player.sendMessage(Component.text("§e§lCLICK HERE §r§eto learn more on the Official SkyBlock Wiki!")
+                                .hoverEvent(Component.text("§eClick to view the " + statistic.getDisplayName() + " §eWiki page!"))
+                                .clickEvent(ClickEvent.openUrl("https://wiki.hypixel.net/" + description.getWikiName()))
+                        );
+                        player.sendMessage("§a§l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+                    }
+                });
+            });
+            return TaskSchedule.seconds(10);
+        });
     }
 
     public static void barLoop() {
@@ -457,6 +528,7 @@ public class PlayerStatistics {
             SkyBlockGenericLoader.getLoadedPlayers().forEach(player -> {
                 Thread.startVirtualThread(() -> {
                     double speed = player.getStatistics().allStatistics().getOverall(ItemStatistic.SPEED);
+                    if (player.isSpeedManaged()) return; // if the Speed is currently managed by another source, don't override it
                     player.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue((float) (speed / 1000));
                 });
             });

@@ -2,15 +2,16 @@ package net.swofty.type.hub.npcs;
 
 import net.minestom.server.coordinate.Pos;
 import net.swofty.type.generic.user.HypixelPlayer;
-import net.swofty.type.hub.gui.rosetta.GUIRosetta;
-import net.swofty.type.generic.entity.npc.NPCParameters;
 import net.swofty.type.generic.entity.npc.HypixelNPC;
-import net.swofty.type.skyblockgeneric.user.SkyBlockPlayer;
+import net.swofty.type.generic.entity.npc.configuration.HumanConfiguration;
+import net.swofty.type.hub.gui.rosetta.GUIRosetta;
+
+import net.swofty.type.generic.event.custom.NPCInteractEvent;
 
 public class NPCRosetta extends HypixelNPC {
 
     public NPCRosetta() {
-        super(new NPCParameters() {
+        super(new HumanConfiguration() {
             @Override
             public String[] holograms(HypixelPlayer player) {
                 return new String[]{"§aStarter Gear", "§fRosetta", "§e§lCLICK"};
@@ -32,14 +33,14 @@ public class NPCRosetta extends HypixelNPC {
             }
 
             @Override
-            public boolean looking() {
+            public boolean looking(HypixelPlayer player) {
                 return true;
             }
         });
     }
 
     @Override
-    public void onClick(PlayerClickNPCEvent e) {
+    public void onClick(NPCInteractEvent e) {
        new GUIRosetta().open(e.player());
     }
 }

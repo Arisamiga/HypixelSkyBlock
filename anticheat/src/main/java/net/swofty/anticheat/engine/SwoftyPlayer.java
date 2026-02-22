@@ -1,6 +1,7 @@
 package net.swofty.anticheat.engine;
 
 import lombok.Getter;
+import net.swofty.anticheat.api.AnticheatAPI;
 import net.swofty.anticheat.event.SwoftyEventHandler;
 import net.swofty.anticheat.event.events.PlayerPositionUpdateEvent;
 import net.swofty.anticheat.event.packet.RequestPingPacket;
@@ -30,6 +31,11 @@ public class SwoftyPlayer {
     private long ping;
     private long lastPingResponse;
     private final FlagManager flagManager;
+
+    // Player ability state (from AbilitiesPacket)
+    private boolean flying = false;
+    private boolean allowFlight = false;
+    private boolean creativeMode = false;
 
     public SwoftyPlayer(UUID uuid) {
         this.uuid = uuid;
@@ -121,6 +127,12 @@ public class SwoftyPlayer {
 
     public void flag(FlagType flagType, double certainty) {
         if (lastTicks.size() == 1) return; // We need at least 2 ticks to flag
+
+        // Check if player has bypass for this flag type
+        if (AnticheatAPI.hasBypass(uuid, flagType)) {
+            return;
+        }
+
         flagManager.addFlag(flagType, certainty);
     }
 
@@ -134,5 +146,15 @@ public class SwoftyPlayer {
 
     public void sendPacket(SwoftyPacket packet) {
         SwoftyAnticheat.getLoader().sendPacket(uuid, packet);
+    }
+
+    public void updateAbilities(boolean flying, boolean allowFlight, boolean creativeMode) {
+        this.flying = flying;
+        this.allowFlight = allowFlight;
+        this.creativeMode = creativeMode;
+    }
+
+    public boolean shouldBypassMovementChecks() {
+        return flying || creativeMode || allowFlight;
     }
 }

@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
-import net.swofty.commons.item.ItemType;
+import net.swofty.commons.skyblock.item.ItemType;
 import net.swofty.type.skyblockgeneric.SkyBlockGenericLoader;
 import net.swofty.type.skyblockgeneric.item.SkyBlockItem;
 import net.swofty.type.skyblockgeneric.user.SkyBlockPlayer;
@@ -70,12 +70,11 @@ public abstract class SkyBlockRecipe<T> {
     public static SkyBlockRecipe<?> getStandardEnchantedRecipe(SkyBlockRecipe.RecipeType type,
                                                                ItemType craftingMaterial,
                                                                ItemType output) {
-        ShapelessRecipe recipe = new ShapelessRecipe(type, new SkyBlockItem(output))
-                .add(craftingMaterial, 32)
-                .add(craftingMaterial, 32)
-                .add(craftingMaterial, 32)
-                .add(craftingMaterial, 32)
-                .add(craftingMaterial, 32);
+        ShapelessRecipe recipe = new ShapelessRecipe(type, new SkyBlockItem(output));
+        for (int i = 0; i < 5; i++) {
+            recipe.add(craftingMaterial, 32);
+        }
+
         recipe.setCustomRecipeDisplay(new SkyBlockItem[] {
                 new SkyBlockItem(ItemType.AIR),
                 new SkyBlockItem(craftingMaterial, 32),
@@ -116,7 +115,7 @@ public abstract class SkyBlockRecipe<T> {
         String completedLoadingBar = "§2§m" + baseLoadingBar.substring(0, Math.min(completedLength, maxBarLength));
         int formattingCodeLength = 4;  // Adjust this if you add or remove formatting codes
         String uncompletedLoadingBar = "§7§m" + baseLoadingBar.substring(Math.min(
-                completedLoadingBar.length() - formattingCodeLength, // Adjust for added formatting codes
+                completedLoadingBar.length() - formattingCodeLength,  // Adjust for added formatting codes
                 maxBarLength
         ));
 

@@ -1,8 +1,9 @@
 package net.swofty.type.skyblockgeneric.mission.missions.lumber;
 
-import net.swofty.commons.item.ItemType;
+import net.swofty.commons.skyblock.item.ItemType;
 import net.swofty.type.skyblockgeneric.mission.MissionData;
 import net.swofty.type.skyblockgeneric.mission.SkyBlockMission;
+import net.swofty.type.skyblockgeneric.mission.missions.thepark.birchpark.MissionTravelToThePark;
 import net.swofty.type.skyblockgeneric.region.RegionType;
 import net.swofty.type.skyblockgeneric.user.SkyBlockPlayer;
 
@@ -18,7 +19,7 @@ public class MissionTalkToLumberjackAgain extends SkyBlockMission {
 
     @Override
     public String getName() {
-        return "Talk to the Lumber Jack";
+        return "Give Lumber Jack Oak Logs";
     }
 
     @Override
@@ -29,7 +30,7 @@ public class MissionTalkToLumberjackAgain extends SkyBlockMission {
 
     @Override
     public void onEnd(SkyBlockPlayer player, Map<String, Object> customData, MissionData.ActiveMission mission) {
-        player.addAndUpdateItem(ItemType.SWEET_AXE);
+        player.getMissionData().startMission(MissionTravelToThePark.class);
     }
 
     @Override
